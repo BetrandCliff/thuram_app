@@ -37,7 +37,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_screenutil: ^5.9.3
   flutter_rating_bar:
-  intl_phone_field:
+  country_code_picker: ^3.2.0
+  flutter_localizations:
+    sdk: flutter
   # video_player:
 
 dev_dependencies:

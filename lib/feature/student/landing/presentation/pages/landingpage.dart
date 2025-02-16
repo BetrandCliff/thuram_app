@@ -11,6 +11,7 @@ import '../../../login/presentation/login.dart';
 import '../../../login/presentation/signup.dart';
 import '../widget/conversation.dart';
 import 'edit-profile.dart';
+import 'search-staff.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -22,7 +23,7 @@ class LandingPage extends StatefulWidget {
 GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
 
 class _LandingPageState extends State<LandingPage> {
-  final List<Widget> Pages = const [EditProfile(),LostAndFound(),ProfilePage(),CustomDescriptionCard(),ProfilePage(),];
+  final List<Widget> Pages =  [EditProfile(),LostAndFound(),SearchStaffScreen(),CustomDescriptionCard(),ProfilePage(),];
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(

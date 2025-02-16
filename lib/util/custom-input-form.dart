@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/values.dart';
 
 class CustomInputForm extends StatelessWidget {
-  const CustomInputForm({super.key, required this.preIcon,this.sufIcon, required this.hint });
+  const CustomInputForm(
+      {super.key, required this.preIcon, this.sufIcon, required this.hint, this.label,this.isLabel=false});
   final IconData preIcon;
   final IconData? sufIcon;
   final String hint;
+  final String? label;
+  final bool isLabel;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -13,8 +16,12 @@ class CustomInputForm extends StatelessWidget {
         width: double.infinity,
         child: TextField(
           decoration: InputDecoration(
-            hintText:hint ,
-            hintStyle: Theme.of(context).textTheme.displaySmall,
+              label:isLabel? Text(
+                "$label",
+                style: Theme.of(context).textTheme.displayMedium,
+              ):null,
+              hintText: hint,
+              hintStyle: Theme.of(context).textTheme.displaySmall,
               prefixIcon: Icon(preIcon),
               suffixIcon: Icon(sufIcon),
               border: OutlineInputBorder(

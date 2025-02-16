@@ -1,5 +1,7 @@
 // Login Form Widget
 import 'package:flutter/material.dart';
+import 'package:thuram_app/feature/student/landing/presentation/pages/landingpage.dart';
+import 'package:thuram_app/util/next-screen.dart';
 
 import '../../../../util/custom-button.dart';
 import '../../../../util/custom-input-form.dart';
@@ -46,6 +48,9 @@ class SignupForm extends StatelessWidget {
           ),
           CustomButton(
             text: 'Register',
+            onTap: () {
+              nextScreen(context, LandingPage());
+            },
           )
         ],
       ),

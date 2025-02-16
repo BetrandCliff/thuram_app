@@ -30,6 +30,9 @@ class LoginForm extends StatelessWidget {
           ),
           CustomButton(
             text: 'Login',
+            onTap: () {
+              
+            },
           )
         ],
       ),

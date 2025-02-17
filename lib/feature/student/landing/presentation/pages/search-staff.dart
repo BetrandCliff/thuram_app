@@ -163,6 +163,7 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
       itemBuilder: (context, index) {
         final item = list[index];
         return Card(
+        
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
             leading: item['image'] != null && item['image']!.isNotEmpty

@@ -1,8 +1,11 @@
 // Login Form Widget
 import 'package:flutter/material.dart';
+import 'package:thuram_app/feature/admin/presentations/pages/add-staff.dart';
+import 'package:thuram_app/util/next-screen.dart';
 
 import '../../../../util/custom-button.dart';
 import '../../../../util/custom-input-form.dart';
+import '../../../admin/presentations/pages/admin-landing-page.dart';
 
 class LoginForm extends StatelessWidget {
   @override
@@ -31,7 +34,7 @@ class LoginForm extends StatelessWidget {
           CustomButton(
             text: 'Login',
             onTap: () {
-              
+              nextScreen(context, AdminLandingPage());
             },
           )
         ],

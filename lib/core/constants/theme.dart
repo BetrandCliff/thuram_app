@@ -7,6 +7,10 @@ class AppTheme {
         backgroundColor: Color(0xffffffff)
       ),
       useMaterial3: true,
+      cardColor: Colors.white,
+      cardTheme: CardTheme(
+        color: Colors.white
+      ),
       textTheme: TextTheme(
           displayMedium: TextStyle(fontSize: 16, color: Color(0xff000000)),
           displaySmall: TextStyle(

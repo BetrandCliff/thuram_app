@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1003798788019",
+    "project_id": "thuram-bcc5e",
+    "storage_bucket": "thuram-bcc5e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1003798788019:android:118a407e525536df723dc6",
+        "android_client_info": {
+          "package_name": "com.example.thuram_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-eQLqf8rAsJG8J0biJNcCYifBhIvjdJA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

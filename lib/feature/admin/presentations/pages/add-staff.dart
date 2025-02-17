@@ -17,6 +17,13 @@ class AddStaffForm extends StatefulWidget {
 }
 
 class _AddStaffFormState extends State<AddStaffForm> {
+
+    final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _officeController = TextEditingController();
+  final TextEditingController _specialtyController = TextEditingController();
+
+
   String? role;
   String fullName = '';
   String email = '';
@@ -28,6 +35,9 @@ class _AddStaffFormState extends State<AddStaffForm> {
   final List<String> roles = ['Professor', 'Teaching Assistant'];
 
   Future<void> _showImagePickerOptions(BuildContext context) {
+
+
+
     return showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -114,14 +124,14 @@ class _AddStaffFormState extends State<AddStaffForm> {
                   },
                 ),
               ),
-              const CustomInputForm(preIcon: Icons.person, hint: "Full Name"),
+               CustomInputForm(preIcon: Icons.person, hint: "Full Name",controller: _usernameController,),
               const SizedBox(height: 20),
-              const CustomInputForm(preIcon: Icons.person, hint: "Email"),
+               CustomInputForm(preIcon: Icons.person, hint: "Email",controller: _emailController,),
               const SizedBox(height: 20),
-              const CustomInputForm(
-                  preIcon: Icons.person, hint: "Office Location"),
+               CustomInputForm(
+                  preIcon: Icons.person, hint: "Office Location",controller: _officeController,),
               const SizedBox(height: 20),
-              const CustomInputForm(preIcon: Icons.person, hint: "Speciality"),
+               CustomInputForm(preIcon: Icons.person, hint: "Speciality",controller:_specialtyController ,),
               const SizedBox(height: 20),
               CustomButton(
                   text: "Submit",

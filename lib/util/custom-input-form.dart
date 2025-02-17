@@ -5,10 +5,11 @@ class CustomInputForm extends StatelessWidget {
   const CustomInputForm(
       {super.key,
       required this.preIcon,
+      required this.controller, 
       this.sufIcon,
       required this.hint,
       this.label,
-      this.width=double.infinity,
+      this.width = double.infinity,
       this.isLabel = false});
   final IconData preIcon;
   final IconData? sufIcon;
@@ -16,12 +17,14 @@ class CustomInputForm extends StatelessWidget {
   final String? label;
   final bool isLabel;
   final double width;
+  final TextEditingController controller;
   @override
   Widget build(BuildContext context) {
     return Container(
         height: 60,
         width: width,
         child: TextField(
+          controller: controller,
           decoration: InputDecoration(
               label: isLabel
                   ? Text(

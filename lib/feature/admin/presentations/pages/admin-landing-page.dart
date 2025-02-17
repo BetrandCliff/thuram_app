@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/asset-paths.dart';
 import 'package:thuram_app/core/constants/colors.dart';
-import 'package:thuram_app/feature/student/landing/presentation/pages/profile.dart';
+import 'package:thuram_app/feature/student/landing/presentation/pages/homepage.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/lost_and_found.dart';
 import 'package:thuram_app/util/drawer.dart';
 
@@ -9,7 +9,7 @@ import '../../../../core/constants/values.dart';
 import '../../../../util/custom-description-card.dart';
 import '../../../student/login/presentation/login.dart';
 import '../../../student/login/presentation/signup.dart';
-import '../../../student/landing/presentation/widget/conversation.dart';
+import '../../../student/landing/presentation/widget/academy.dart';
 import '../../../student/landing/presentation/pages/edit-profile.dart';
 import '../../../student/landing/presentation/pages/search-staff.dart';
 import 'add-office.dart';
@@ -27,7 +27,7 @@ class AdminLandingPage extends StatefulWidget {
 GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
 
 class _AdminLandingPageState extends State<AdminLandingPage> {
-  final List<Widget> Pages =  [AddStaffForm(),AddCourse(),AddOfficer(),Comment(),ProfilePage(),];
+  final List<Widget> Pages =  [AddStaffForm(),AddCourse(),AddOfficer(),Comment(),HomePage(),];
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(

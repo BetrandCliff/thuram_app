@@ -15,6 +15,12 @@ class AddCourse extends StatefulWidget {
 }
 
 class _AddCourseState extends State<AddCourse> {
+
+  final TextEditingController _couresController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  // final TextEditingController _confirmPasswordController = TextEditingController();
+
   String? role;
   String fullName = '';
   String email = '';
@@ -83,21 +89,24 @@ class _AddCourseState extends State<AddCourse> {
               SizedBox(
                 height: height(context) / 20,
               ),
-              const CustomInputForm(
+               CustomInputForm(
+                controller:_codeController ,
                 preIcon: Icons.person,
                 hint: "CSEN403",
                 label: "course code",
                 isLabel: true,
               ),
               const SizedBox(height: 20),
-              const CustomInputForm(
+               CustomInputForm(
+                controller: _codeController,
                 preIcon: Icons.person,
                 label: "Course Name",
                 hint: "programming concepts",
                 isLabel: true,
               ),
               const SizedBox(height: 20),
-              const CustomInputForm(
+               CustomInputForm(
+                controller: _descriptionController,
                 preIcon: Icons.person,
                 label: "Description",
                 hint: "",

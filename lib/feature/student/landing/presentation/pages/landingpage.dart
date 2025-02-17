@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/asset-paths.dart';
 import 'package:thuram_app/core/constants/colors.dart';
-import 'package:thuram_app/feature/student/landing/presentation/pages/profile.dart';
+import 'package:thuram_app/feature/student/landing/presentation/pages/homepage.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/lost_and_found.dart';
 import 'package:thuram_app/util/drawer.dart';
 
@@ -9,13 +9,13 @@ import '../../../../../core/constants/values.dart';
 import '../../../../../util/custom-description-card.dart';
 import '../../../login/presentation/login.dart';
 import '../../../login/presentation/signup.dart';
-import '../widget/conversation.dart';
+import '../widget/academy.dart';
 import 'edit-profile.dart';
 import 'search-staff.dart';
 
 class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
-
+  const LandingPage({super.key, this.currenetPage = 0});
+  final currenetPage;
   @override
   State<LandingPage> createState() => _LandingPageState();
 }
@@ -23,7 +23,24 @@ class LandingPage extends StatefulWidget {
 GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
 
 class _LandingPageState extends State<LandingPage> {
-  final List<Widget> Pages =  [EditProfile(),LostAndFound(),SearchStaffScreen(),CustomDescriptionCard(),ProfilePage(),];
+  final List<Widget> Pages = [
+    HomePage(),
+    EditProfile(),
+    SearchStaffScreen(),
+    CustomDescriptionCard(),
+    
+    EditProfile(),
+    
+  ];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _selectedIndex = widget.currenetPage;
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -48,7 +65,7 @@ class _LandingPageState extends State<LandingPage> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
-          child:Pages[_selectedIndex] ,
+          child: Pages[_selectedIndex],
         ),
         bottomNavigationBar: BottomAppBar(
           color: Colors.transparent,

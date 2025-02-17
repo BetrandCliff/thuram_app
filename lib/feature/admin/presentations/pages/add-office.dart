@@ -64,6 +64,10 @@ class _AddOfficerState extends State<AddOfficer> {
     );
   }
 
+  final TextEditingController _longitudeController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _officeController = TextEditingController();
+  final TextEditingController _latitudeController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,13 +96,13 @@ class _AddOfficerState extends State<AddOfficer> {
                   },
                 ),
               ),
-              const CustomInputForm(preIcon: Icons.person, label: "Full Name",hint: "",isLabel: true,),
+               CustomInputForm(preIcon: Icons.person, label: "Full Name",hint: "",isLabel: true,controller: _usernameController,),
               const SizedBox(height: 20),
-              const CustomInputForm(preIcon: Icons.person, hint: "Email",label: "Latitude",isLabel: true,),
+               CustomInputForm(preIcon: Icons.person, hint: "",label: "Latitude",isLabel: true,controller: _latitudeController,),
               const SizedBox(height: 20),
-              const CustomInputForm(preIcon: Icons.person, label: "Longetude", hint: "",isLabel: true,),
+               CustomInputForm(preIcon: Icons.person, label: "Longetude", hint: "",isLabel: true,controller: _longitudeController,),
               const SizedBox(height: 20),
-              const CustomInputForm(preIcon: Icons.person, label: "Official Location",hint: "",isLabel: true,),
+               CustomInputForm(preIcon: Icons.person, label: "Official Location",hint: "",isLabel: true,controller: _officeController,),
               const SizedBox(height: 20),
               CustomButton(text: "Submit", onTap: () {},width: 250,),
             ],

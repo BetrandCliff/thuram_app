@@ -8,7 +8,11 @@ import '../../../../../util/country-code.dart';
 import '../../../../../util/custom-input-form.dart';
 
 class EditProfile extends StatelessWidget {
-  const EditProfile({super.key});
+   EditProfile({super.key});
+final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _Controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +42,7 @@ class EditProfile extends StatelessWidget {
                   height: 20,
                 ),
                 CustomInputForm(
+                  controller:_usernameController ,
                   hint: 'Hakeem Smith',
                   preIcon: Icons.person,
                   label: "Full Name",
@@ -62,6 +67,7 @@ class EditProfile extends StatelessWidget {
                     ),
                     Expanded(
                         child: CustomInputForm(
+                          controller: _Controller,
                       preIcon: Icons.phone,
                       hint: "673109557",
                       label: "Phone Number",
@@ -73,6 +79,7 @@ class EditProfile extends StatelessWidget {
                   height: 20,
                 ),
                 CustomInputForm(
+                  controller: _bioController,
                   hint: 'Watch the movie 🎬',
                   preIcon: Icons.person,
                   label: "Bio",
@@ -82,6 +89,7 @@ class EditProfile extends StatelessWidget {
                   height: 20,
                 ),
                 CustomInputForm(
+                  controller: _passwordController,
                   hint: '******',
                   preIcon: Icons.person,
                   label: "Password",

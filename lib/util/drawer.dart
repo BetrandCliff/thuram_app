@@ -71,7 +71,7 @@ class DrawerItems extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () {
-                    nextScreen(context, const EditProfile());
+                    nextScreen(context,  EditProfile());
                   },
                   child: const ListTile(
                     leading: Icon(Icons.edit),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:thuram_app/feature/student/landing/presentation/widget/confersions.dart';
 
 import '../../../../../core/constants/asset-paths.dart';
 import '../../../../../core/constants/colors.dart';
 import '../../../../../core/constants/values.dart';
 import '../widget/academy.dart';
+import '../widget/clubs_and_post.dart';
 import '../widget/lost-items.dart';
 import '../widget/lost_and_found.dart';
 
@@ -25,6 +27,7 @@ class HomePage extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
@@ -122,16 +125,14 @@ class HomePage extends StatelessWidget {
                         Container(
                           margin: EdgeInsets.only(top: 10),
                           height: 30,
-                          child: Row(
-                            children: [
+                          child: 
                               Text(
-                                "Watching the movies",
+                                "Watching the movies🎬",
                                 style:
                                     Theme.of(context).textTheme.displayMedium,
                               ),
-                              Icon(Icons.movie)
-                            ],
-                          ),
+                             
+                           
                         )
                       ],
                     ),
@@ -161,7 +162,7 @@ class HomePage extends StatelessWidget {
                     icon: Icon(Icons.people),
                   ),
                   Tab(
-                    text: "Conversation",
+                    text: "Confersions",
                     icon: Icon(Icons.message),
                   ),
                 ],
@@ -173,8 +174,8 @@ class HomePage extends StatelessWidget {
                   children:const [
                     Academy(),
                     MissingItems(),
-                    LostAndFound(),
-                    LostAndFound(),
+                    ClubsAndPost(),
+                    Confersions(),
                     // LostAndFound()
                   ],
                 ),

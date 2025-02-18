@@ -10,7 +10,9 @@ import '../../../../../util/custom-description-card.dart';
 import '../../../login/presentation/login.dart';
 import '../../../login/presentation/signup.dart';
 import '../widget/academy.dart';
+import 'courses.dart';
 import 'edit-profile.dart';
+import 'following.dart';
 import 'search-staff.dart';
 
 class LandingPage extends StatefulWidget {
@@ -25,11 +27,11 @@ GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
 class _LandingPageState extends State<LandingPage> {
   final List<Widget> Pages = [
     HomePage(),
-    EditProfile(),
+    Following(),
     SearchStaffScreen(),
-    CustomDescriptionCard(),
+    CourseWidget(),
     
-    EditProfile(),
+    CustomDescriptionCard(),
     
   ];
 
@@ -82,7 +84,7 @@ class _LandingPageState extends State<LandingPage> {
                   onPressed: () => _onItemTapped(0),
                 ),
                 IconButton(
-                  icon: Icon(Icons.favorite),
+                  icon: Icon(Icons.people),
                   color: _selectedIndex == 1 ? Colors.blue : Colors.grey,
                   onPressed: () => _onItemTapped(1),
                 ),
@@ -118,7 +120,7 @@ class _LandingPageState extends State<LandingPage> {
                 ),
                 SizedBox(width: 40), // Space for the center button
                 IconButton(
-                  icon: Icon(Icons.notifications),
+                  icon: Icon(Icons.file_copy),
                   color: _selectedIndex == 3 ? Colors.blue : Colors.grey,
                   onPressed: () => _onItemTapped(3),
                 ),
@@ -131,6 +133,7 @@ class _LandingPageState extends State<LandingPage> {
             ),
           ),
         ),
+        floatingActionButton: ClipOval(child: FloatingActionButton(onPressed: (){},child: Icon(Icons.chat),)),
       ),
     );
   }

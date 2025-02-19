@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../util/custom-button.dart';
 import '../../../../util/custom-input-form.dart';
 import '../../../admin/presentations/pages/admin-landing-page.dart';
+import '../../../lecturer/presentation/pages/lecturer-landing-page.dart';
 
 class SignupForm extends StatefulWidget {
 
@@ -35,7 +36,7 @@ class _SignupFormState extends State<SignupForm> {
       );
       // Navigate to LandingPage on success
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) =>_emailController.text.trim().contains("staff")?AdminLandingPage():LandingPage()),
+        MaterialPageRoute(builder: (context) =>_emailController.text.trim().contains("admin")?AdminLandingPage():_emailController.text.trim().contains("staff")?LecturerLandingPage():LandingPage()),
       );
     } on FirebaseAuthException catch (e) {
       String message = "An error occurred. Please try again.";

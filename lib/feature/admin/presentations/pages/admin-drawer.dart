@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/asset-paths.dart';
 import 'package:thuram_app/core/constants/colors.dart';
+import 'package:thuram_app/feature/admin/presentations/pages/approve-and-reject.dart';
 import 'package:thuram_app/feature/student/landing/presentation/pages/edit-profile.dart';
+import 'package:thuram_app/feature/student/landing/presentation/widget/confersions.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/lost_and_found.dart';
-import 'package:thuram_app/mainscreen.dart';
+import 'package:thuram_app/feature/student/login/presentation/login.dart';
 import 'package:thuram_app/util/next-screen.dart';
 
-class DrawerItems extends StatelessWidget {
-  const DrawerItems({super.key});
+import '../../../../mainscreen.dart';
+
+class AdminDrawerItems extends StatelessWidget {
+  const AdminDrawerItems({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,25 +49,46 @@ class DrawerItems extends StatelessWidget {
                 const Divider(),
                 GestureDetector(
                   onTap: () {
-                    nextScreen(context, LostAndFound());
+                    nextScreen(context, Comment());
+                  },
+                  child: ListTile(
+                    leading: Icon(Icons.notifications),
+                    title: Text("Confessions"),
+                    trailing: Badge(
+                      label:
+                          Text("2", style: TextStyle(color: Colors.white)),
+                      child: Icon(Icons.notifications),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    nextScreen(context, EditProfile());
                   },
                   child: const ListTile(
-                    leading: Icon(Icons.visibility),
-                    title: Text("LOST & FOUND"),
+                    leading: Icon(
+                      Icons.edit,
+                      size: 16,
+                    ),
+                    title: Text("Edit Profile"),
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    nextScreen(context, EditProfile());
+                  },
                   child: const ListTile(
-                    leading: Icon(Icons.location_on_sharp),
-                    title: Text("Offices  and Outlets"),
+                    leading: Icon(Icons.share),
+                    title: Text("share"),
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    nextScreen(context, EditProfile());
+                  },
                   child: const ListTile(
-                    leading: Icon(Icons.search),
-                    title: Text("Search"),
+                    leading: Icon(Icons.policy),
+                    title: Text("Policies"),
                   ),
                 )
               ],
@@ -71,17 +96,8 @@ class DrawerItems extends StatelessWidget {
             Column(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    nextScreen(context, EditProfile());
-                  },
-                  child: const ListTile(
-                    leading: Icon(Icons.edit),
-                    title: Text("Edit Profile"),
-                  ),
-                ),
-                GestureDetector(
                   onTap: () {},
-                  child: ListTile(
+                  child: const ListTile(
                     leading: Icon(Icons.settings),
                     title: Text("Settings"),
                   ),
@@ -90,11 +106,11 @@ class DrawerItems extends StatelessWidget {
                   onTap: () {
                     nextScreen(context, MainScreen());
                   },
-                  child: ListTile(
+                  child: const ListTile(
                     leading: Icon(Icons.logout),
-                    title: Text("Logout"),
+                    title: Text("Log out"),
                   ),
-                )
+                ),
               ],
             )
           ],

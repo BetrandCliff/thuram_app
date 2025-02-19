@@ -1,12 +1,14 @@
 
 import 'package:flutter/material.dart';
 
-import '../core/constants/asset-paths.dart';
-import '../core/constants/colors.dart';
-import '../core/constants/values.dart';
+import '../../../../core/constants/asset-paths.dart';
+import '../../../../core/constants/colors.dart';
+import '../../../../core/constants/values.dart';
 
-class CustomDescriptionCard extends StatelessWidget {
-  const CustomDescriptionCard({super.key});
+
+
+class AdminProfile extends StatelessWidget {
+  const AdminProfile({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -105,26 +107,26 @@ class CustomDescriptionCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 26), // Spacing
-                  // Activity Section
-                  Text(
-                    "Activity Overview:",
-                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                  ),
-                  const SizedBox(height: 16), // Spacing
-                  // Posts, Courses, Followers, Following
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _ActivityCard("Posts", "45"),
-                      _ActivityCard("Courses", "12"),
-                      _ActivityCard("Followers", "356"),
-                      _ActivityCard("Following", "189"),
-                    ],
-                  ),
+                  // const SizedBox(height: 26), // Spacing
+                  // // Activity Section
+                  // Text(
+                  //   "Activity Overview:",
+                  //   style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                  //         fontWeight: FontWeight.bold,
+                  //         fontSize: 16,
+                  //       ),
+                  // ),
+                  // const SizedBox(height: 16), // Spacing
+                  // // Posts, Courses, Followers, Following
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  //   children: [
+                  //     _ActivityCard("Posts", "45"),
+                  //     _ActivityCard("Courses", "12"),
+                  //     _ActivityCard("Followers", "356"),
+                  //     _ActivityCard("Following", "189"),
+                  //   ],
+                  // ),
                   const SizedBox(height: 26), // Spacing
                   // Contact Information Section
                   Text(
@@ -150,25 +152,25 @@ class CustomDescriptionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 26), // Spacing
                   // Skills Section
-                  Text(
-                    "Skills:",
-                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: [
-                      Chip(label: Text("AI")),
-                      Chip(label: Text("Machine Learning")),
-                      Chip(label: Text("Python")),
-                      Chip(label: Text("Flutter")),
-                      Chip(label: Text("JavaScript")),
-                    ],
-                  ),
+                  // Text(
+                  //   "Skills:",
+                  //   style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                  //         fontWeight: FontWeight.bold,
+                  //         fontSize: 16,
+                  //       ),
+                  // ),
+                  // const SizedBox(height: 8),
+                  // Wrap(
+                  //   spacing: 8.0,
+                  //   runSpacing: 4.0,
+                  //   children: [
+                  //     Chip(label: Text("AI")),
+                  //     Chip(label: Text("Machine Learning")),
+                  //     Chip(label: Text("Python")),
+                  //     Chip(label: Text("Flutter")),
+                  //     Chip(label: Text("JavaScript")),
+                  //   ],
+                  // ),
                 ],
               ),
             ),

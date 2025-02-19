@@ -6,8 +6,8 @@ import '../../../../../core/constants/asset-paths.dart';
 import '../../../../../core/constants/colors.dart';
 import '../pages/profile.dart';
 
-class Confersions extends StatelessWidget {
-  const Confersions({super.key});
+class Confessions extends StatelessWidget {
+  const Confessions({super.key});
 
   @override
   Widget build(BuildContext context) {

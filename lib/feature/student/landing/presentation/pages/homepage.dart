@@ -175,7 +175,7 @@ class HomePage extends StatelessWidget {
                     Academy(),
                     MissingItems(),
                     ClubsAndPost(),
-                    Confersions(),
+                    Confessions(),
                     // LostAndFound()
                   ],
                 ),

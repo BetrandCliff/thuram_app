@@ -116,7 +116,7 @@ class _AddCourseState extends State<AddCourse> {
               CustomButton(
                 text: "Submit",
                 onTap: () {},
-                width: 250,
+                // width: 250,
               ),
             ],
           ),

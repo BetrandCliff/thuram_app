@@ -2,6 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:thuram_app/feature/admin/presentations/pages/add-staff.dart';
+import 'package:thuram_app/feature/lecturer/presentation/pages/lecturer-landing-page.dart';
 import 'package:thuram_app/feature/student/landing/presentation/pages/landingpage.dart';
 import 'package:thuram_app/util/next-screen.dart';
 
@@ -27,7 +28,7 @@ class _LoginFormState extends State<LoginForm> {
       );
       // Navigate to AdminLandingPage on success
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) =>_emailController.text.trim().contains("staff")?AdminLandingPage():LandingPage()),
+        MaterialPageRoute(builder: (context) =>_emailController.text.trim().contains("admin")?AdminLandingPage():_emailController.text.trim().contains("staff")?LecturerLandingPage():LandingPage()),
       );
     } on FirebaseAuthException catch (e) {
       String message = "An error occurred. Please try again.";

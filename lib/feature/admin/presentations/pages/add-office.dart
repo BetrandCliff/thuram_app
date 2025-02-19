@@ -4,11 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:thuram_app/util/custom-button.dart';
 import 'package:thuram_app/util/custom-input-form.dart';
 import 'package:thuram_app/util/widthandheight.dart';
-// import 'package:file_picker/file_picker.dart';  // Import the file_picker package
-// import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import '../../../../core/constants/asset-paths.dart';
-import '../../../../core/constants/colors.dart';
+
 
 class AddOfficer extends StatefulWidget {
   @override
@@ -71,7 +67,7 @@ class _AddOfficerState extends State<AddOfficer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add Office/ Outlet')),
+      // appBar: AppBar(title: Text('Add Office/ Outlet')),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -79,23 +75,28 @@ class _AddOfficerState extends State<AddOfficer> {
             children: [
              
               SizedBox(
-                width: width(context) / 2,
-                child: DropdownButton<String>(
-                  dropdownColor: Colors.white,
-                  value: role,
-                  items: roles.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value, style: Theme.of(context).textTheme.displayMedium),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      role = newValue;
-                    });
-                  },
+                width: width(context) ,
+                child: Padding(
+                  padding: const EdgeInsets.only(left:8.0,right: 20),
+                  child: DropdownButton<String>(
+                    hint: Text("Office/Outlet", style: Theme.of(context).textTheme.displayMedium),
+                    dropdownColor: Colors.white,
+                    value: role,
+                    items: roles.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value, style: Theme.of(context).textTheme.displayMedium),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        role = newValue;
+                      });
+                    },
+                  ),
                 ),
               ),
+              const SizedBox(height: 20),
                CustomInputForm(preIcon: Icons.person, label: "Full Name",hint: "",isLabel: true,controller: _usernameController,),
               const SizedBox(height: 20),
                CustomInputForm(preIcon: Icons.person, hint: "",label: "Latitude",isLabel: true,controller: _latitudeController,),
@@ -104,7 +105,7 @@ class _AddOfficerState extends State<AddOfficer> {
               const SizedBox(height: 20),
                CustomInputForm(preIcon: Icons.person, label: "Official Location",hint: "",isLabel: true,controller: _officeController,),
               const SizedBox(height: 20),
-              CustomButton(text: "Submit", onTap: () {},width: 250,),
+              CustomButton(text: "Submit", onTap: () {}),
             ],
           ),
         ),

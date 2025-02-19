@@ -16,6 +16,8 @@ class Course {
 }
 
 class CourseWidget extends StatelessWidget {
+  
+  final isStudent;
   // Example list of courses
   final List<Course> courses = [
     Course(
@@ -38,16 +40,18 @@ class CourseWidget extends StatelessWidget {
     ),
   ];
 
+   CourseWidget({super.key, this.isStudent=true});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Registered Courses'),
-      ),
+      // appBar: AppBar(
+      //   title: Text(isStudent?'Registered Courses':"Assigned Courses"),
+      // ),
       body: ListView.builder(
         itemCount: courses.length,
         itemBuilder: (context, index) {
-          return CourseItem(course: courses[index]);
+          return CourseItem(course: courses[index],isStudent: isStudent,);
         },
       ),
     );
@@ -56,8 +60,8 @@ class CourseWidget extends StatelessWidget {
 
 class CourseItem extends StatelessWidget {
   final Course course;
-
-  CourseItem({required this.course});
+final isStudent;
+  CourseItem({required this.course, this.isStudent=true});
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +88,8 @@ class CourseItem extends StatelessWidget {
             Text('Level: ${course.level}'),
             Text('Duration: ${course.duration}'),
             SizedBox(height: 12),
+            
+            if(isStudent)
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

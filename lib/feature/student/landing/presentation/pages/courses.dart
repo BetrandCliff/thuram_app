@@ -1,188 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 
-import '../../../../admin/presentations/model/course.dart';
-
-
-
-
-
-
-
-
-
-
-
-class CourseWidget extends StatefulWidget {
-  final bool isStudent;
-  final bool isStaff;
-  final String? staffId;  // Optional staffId to fetch courses assigned to this staff
-
-  CourseWidget({super.key, this.isStudent = true, this.isStaff = false, this.staffId});
-
-  @override
-  _CourseWidgetState createState() => _CourseWidgetState();
-}
-
-class _CourseWidgetState extends State<CourseWidget> {
-  late List<Course> courses;
-
-  @override
-  void initState() {
-    super.initState();
-    courses = [];
-    fetchCourses();
-  }
-
-  // Fetch courses assigned or registered depending on isStudent or isStaff
-  Future<void> fetchCourses() async {
-    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-    QuerySnapshot snapshot;
-
-    if (widget.isStudent) {
-      // Fetch courses registered by the student from Firestore
-      snapshot = await FirebaseFirestore.instance
-          .collection('students')
-          .doc(currentUserId)
-          .collection('registeredCourses') // Assuming this collection stores student registrations
-          .get();
-    } else if (widget.isStaff && widget.staffId != null) {
-      // Fetch courses assigned to a specific staff based on the staffId
-      snapshot = await FirebaseFirestore.instance
-          .collection('staff')
-          .doc(widget.staffId) // Use the passed staffId to fetch the assigned courses
-          .collection('assignedCourses')
-          .get();
-    } else if (widget.isStaff) {
-      // Fetch courses assigned to the current staff user
-      snapshot = await FirebaseFirestore.instance
-          .collection('staff')
-          .doc(currentUserId) // Use the currentUserId if no staffId is provided
-          .collection('assignedCourses')
-          .get();
-    } else {
-      // Fetch all courses if neither student nor staff
-      snapshot = await FirebaseFirestore.instance.collection('courses').get();
-    }
-
-    setState(() {
-      courses = snapshot.docs.map((doc) {
-        return Course(
-          courseName: doc['courseName'],
-          courseCode: doc['courseCode'],
-          description: doc['description'],
-          // duration: doc['duration'],
-        );
-      }).toList();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isStudent
-            ? 'Registered Courses'
-            : widget.isStaff
-                ? 'Assigned Courses'
-                : 'All Courses'),
-      ),
-      body: courses.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: courses.length,
-              itemBuilder: (context, index) {
-                return CourseItem(course: courses[index], isStudent: widget.isStudent);
-              },
-            ),
-    );
-  }
-}
-
-class CourseItem extends StatelessWidget {
-  final Course course;
-  final bool isStudent;
-
-  CourseItem({required this.course, this.isStudent = true});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              course.courseName,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text('Tutor: ${course.courseName}'),
-            Text('Level: ${course.courseCode}'),
-            Text('Duration: ${course.description}'),
-            SizedBox(height: 12),
-            if (isStudent)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle "View Details" button
-                      print('View Details of ${course.courseName}');
-                    },
-                    child: Text('View Details'),
-                  ),
-                  SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle "Unregister" button
-                      print('Unregister from ${course.courseName}');
-                    },
-                    child: Text('Unregister'),
-                  ),
-                ],
-              ),
-            if (!isStudent)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle "View Details" button
-                      print('View Details of ${course.courseName}');
-                    },
-                    child: Text('View Details'),
-                  ),
-                  SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle "Unassign" button (if needed)
-                      print('Unassign from ${course.courseName}');
-                    },
-                    child: Text('Unassign'),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
-
-// Example course data
+// // Example course data
 // class Course {
 //   final String title;
 //   final String tutor;
@@ -198,7 +16,7 @@ class CourseItem extends StatelessWidget {
 // }
 
 // class CourseWidget extends StatelessWidget {
-  
+
 //   final isStudent;
 //   // Example list of courses
 //   final List<Course> courses = [
@@ -270,7 +88,7 @@ class CourseItem extends StatelessWidget {
 //             Text('Level: ${course.level}'),
 //             Text('Duration: ${course.duration}'),
 //             SizedBox(height: 12),
-            
+
 //             if(isStudent)
 //             Row(
 //               mainAxisAlignment: MainAxisAlignment.end,
@@ -301,186 +119,238 @@ class CourseItem extends StatelessWidget {
 //     );
 //   }
 // }
-// import 'package:flutter/material.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
 
-// // Example course data
-// class Course {
-//   final String title;
-//   final String tutor;
-//   final String level;
-//   final String duration;
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-//   Course({
-//     required this.title,
-//     required this.tutor,
-//     required this.level,
-//     required this.duration,
-//   });
-// }
+import '../../../../admin/presentations/model/course.dart';
 
-// class CourseWidget extends StatefulWidget {
-//   final bool isStudent;
-//   final bool isStaff;
-//   final String? staffId;  // Optional staffId to fetch courses assigned to this staff
+class CourseWidget extends StatefulWidget {
+  final bool isStudent;
 
-//   CourseWidget({super.key, this.isStudent = true, this.isStaff = false, this.staffId});
+  CourseWidget({super.key, this.isStudent = true});
 
-//   @override
-//   _CourseWidgetState createState() => _CourseWidgetState();
-// }
+  @override
+  _CourseWidgetState createState() => _CourseWidgetState();
+}
 
-// class _CourseWidgetState extends State<CourseWidget> {
-//   late List<Course> courses;
+class _CourseWidgetState extends State<CourseWidget> {
+  late List<Course> courses;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     courses = [];
-//     fetchCourses();
-//   }
+  @override
+  void initState() {
+    super.initState();
+    courses = [];
+    print("\n\nFetching courses");
+    fetchCoursesByCurrentUser();
+  }
 
-//   // Fetch courses assigned or registered depending on isStudent or isStaff
-//   Future<void> fetchCourses() async {
-//     String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-//     QuerySnapshot snapshot;
+  // Future<void> fetchCourses() async {
+  //   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  //   QuerySnapshot snapshot;
+  //   List<Course> fetchedCourses = [];
+  //   print("current staff id ${currentUserId}");
+  //   try {
+  //     // Fetch the staff document
+  //     DocumentSnapshot staffSnapshot = await FirebaseFirestore.instance
+  //         .collection('staff')
+  //         .doc(currentUserId) // Fetch the current staff document
+  //         .get();
 
-//     if (widget.isStudent) {
-//       // Fetch courses registered by the student from Firestore
-//       snapshot = await FirebaseFirestore.instance
-//           .collection('students')
-//           .doc(currentUserId)
-//           .collection('courses')
-//           .get();
-//     } else if (widget.isStaff && widget.staffId != null) {
-//       // Fetch courses assigned to staff based on the staffId
-//       snapshot = await FirebaseFirestore.instance
-//           .collection('staff')
-//           .doc(widget.staffId) // Use the passed staffId to fetch the assigned courses
-//           .collection('assignedCourses')
-//           .get();
-//     } else if (widget.isStaff) {
-//       // Fetch courses assigned to the current staff user
-//       snapshot = await FirebaseFirestore.instance
-//           .collection('staff')
-//           .doc(currentUserId) // Use the currentUserId if no staffId is provided
-//           .collection('assignedCourses')
-//           .get();
-//     } else {
-//       // Fetch all courses if neither student nor staff
-//       snapshot = await FirebaseFirestore.instance.collection('courses').get();
-//     }
+  //     // Check if the staff document exists
+  //     if (staffSnapshot.exists) {
+  //       // Cast the staff data to a Map<String, dynamic> and get the list of course IDs from the 'courses' field
+  //       Map<String, dynamic> staffData =
+  //           staffSnapshot.data() as Map<String, dynamic>;
+  //       List<String> assignedCourses = staffData['courses'] ?? [];
 
-//     setState(() {
-//       courses = snapshot.docs.map((doc) {
-//         return Course(
-//           title: doc['courseName'],
-//           tutor: doc['tutor'],
-//           level: doc['level'],
-//           duration: doc['duration'],
-//         );
-//       }).toList();
-//     });
-//   }
+  //       if (assignedCourses.isNotEmpty) {
+  //         // Fetch courses based on the list of course IDs in the 'courses' field
+  //         snapshot = await FirebaseFirestore.instance
+  //             .collection('courses')
+  //             .where(FieldPath.documentId,
+  //                 whereIn: assignedCourses) // Get courses by IDs
+  //             .get();
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(widget.isStudent
-//             ? 'Registered Courses'
-//             : widget.isStaff
-//                 ? 'Assigned Courses'
-//                 : 'All Courses'),
-//       ),
-//       body: ListView.builder(
-//         itemCount: courses.length,
-//         itemBuilder: (context, index) {
-//           return CourseItem(course: courses[index], isStudent: widget.isStudent, isStaff: widget.isStaff);
-//         },
-//       ),
-//     );
-//   }
-// }
+  //         // Map the results to a list of Course objects
+  //         fetchedCourses = snapshot.docs.map((doc) {
+  //           return Course(
+  //             courseName: doc['courseName'],
+  //             courseCode: doc['courseCode'],
+  //             description: doc['description'],
+  //             // Add other fields if necessary
+  //           );
+  //         }).toList();
+  //       } else {
+  //         // If no courses are assigned to the staff, set an empty list
+  //         fetchedCourses = [];
+  //       }
+  //     } else {
+  //       print("Staff document not found");
+  //     }
 
-// class CourseItem extends StatelessWidget {
-//   final Course course;
-//   final bool isStudent;
-//   final bool isStaff;
+  //     // Update the UI with the fetched courses
+  //     setState(() {
+  //       courses = fetchedCourses;
+  //     });
+  //   } catch (e) {
+  //     print("Error fetching courses: $e");
+  //     ScaffoldMessenger.of(context)
+  //         .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
+  //   }
+  // }
 
-//   CourseItem({required this.course, this.isStudent = true, this.isStaff = false});
+  Future<void> fetchCoursesByCurrentUser() async {
+    print("FETCHING COURSES");
+    String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+    print("CURRENT USER EMAIL IS $currentUserEmail");
+    if (currentUserEmail.isEmpty) {
+      print("No user is currently logged in");
+      return;
+    }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.circular(8),
-//       ),
-//       elevation: 4,
-//       child: Padding(
-//         padding: EdgeInsets.all(16),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Text(
-//               course.title,
-//               style: TextStyle(
-//                 fontSize: 18,
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//             SizedBox(height: 8),
-//             Text('Tutor: ${course.tutor}'),
-//             Text('Level: ${course.level}'),
-//             Text('Duration: ${course.duration}'),
-//             SizedBox(height: 12),
-//             if (isStudent)
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.end,
-//                 children: [
-//                   ElevatedButton(
-//                     onPressed: () {
-//                       // Handle "View Details" button
-//                       print('View Details of ${course.title}');
-//                     },
-//                     child: Text('View Details'),
-//                   ),
-//                   SizedBox(width: 10),
-//                   ElevatedButton(
-//                     onPressed: () {
-//                       // Handle "Unregister" button
-//                       print('Unregister from ${course.title}');
-//                     },
-//                     child: Text('Unregister'),
-//                   ),
-//                 ],
-//               ),
-//             if (isStaff)
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.end,
-//                 children: [
-//                   ElevatedButton(
-//                     onPressed: () {
-//                       // Handle "View Details" button
-//                       print('View Details of ${course.title}');
-//                     },
-//                     child: Text('View Details'),
-//                   ),
-//                   SizedBox(width: 10),
-//                   ElevatedButton(
-//                     onPressed: () {
-//                       // Handle "Unassign" button (if needed)
-//                       print('Unassign from ${course.title}');
-//                     },
-//                     child: Text('Unassign'),
-//                   ),
-//                 ],
-//               ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+    List<Course> fetchedCourses = [];
+    print("Fetching courses for current user with email: $currentUserEmail");
+
+    try {
+      // Fetch the staff document based on the current user's email
+      QuerySnapshot staffSnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .where('email', isEqualTo: currentUserEmail) // Query staff by email
+          .get();
+
+      // Check if the staff document exists
+      if (staffSnapshot.docs.isNotEmpty) {
+        // Get the first document (since email is unique, there should be only one staff document)
+        DocumentSnapshot staffDoc = staffSnapshot.docs.first;
+
+        // Cast the staff data to a Map<String, dynamic> and get the list of course IDs from the 'courses' field
+        Map<String, dynamic> staffData =
+            staffDoc.data() as Map<String, dynamic>;
+        List<String> assignedCourses =
+            List<String>.from(staffData['courses'] ?? []);
+        print("ASSIGNED COURSES ARE");
+        print(assignedCourses);
+        // If courses are assigned to the staff member
+        if (assignedCourses.isNotEmpty) {
+          // Fetch courses based on the list of course IDs in the 'courses' field
+          QuerySnapshot courseSnapshot = await FirebaseFirestore.instance
+              .collection('courses')
+              .where("courseName",
+                  whereIn: assignedCourses) // Query for courses by IDs
+              .get();
+
+          // .where(FieldPath.documentId,
+          //         whereIn: assignedCourses) //
+          // Map the results to a list of Course objects
+          print("COURSE FROM COURSE DOCUMENT");
+          print(courseSnapshot);
+          fetchedCourses = courseSnapshot.docs.map((doc) {
+            return Course(
+              courseName: doc['courseName'],
+              courseCode: doc['courseCode'],
+              description: doc['description'],
+              // Add other fields if necessary
+            );
+          }).toList();
+        } else {
+          // If no courses are assigned to the staff, set an empty list
+          fetchedCourses = [];
+        }
+      } else {
+        print("Staff document not found for email: $currentUserEmail");
+      }
+
+      // Update the UI with the fetched courses
+      setState(() {
+        courses = fetchedCourses;
+      });
+    } catch (e) {
+      print("Error fetching courses: $e");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title:
+            Text(widget.isStudent ? 'Registered Courses' : 'Assigned Courses'),
+      ),
+      body: courses.length == 0
+          ? Center(
+              child: Text("No Course Assigned "),
+            )
+          : ListView.builder(
+              itemCount: courses.length,
+              itemBuilder: (context, index) {
+                return CourseItem(
+                    course: courses[index], isStudent: widget.isStudent);
+              },
+            ),
+    );
+  }
+}
+
+class CourseItem extends StatelessWidget {
+  final Course course;
+  final bool isStudent;
+
+  CourseItem({required this.course, this.isStudent = true});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              course.courseName,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text('Course: ${course.courseName}'),
+            Text('Code: ${course.courseCode}'),
+            Text('Description: ${course.description}'),
+            SizedBox(height: 12),
+            if (isStudent)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Handle "View Details" button
+                      print('View Details of ${course.courseName}');
+                    },
+                    child: Text('View Details'),
+                  ),
+                  SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Handle "Unregister" button
+                      print('Unregister from ${course.courseName}');
+                    },
+                    child: Text('Unregister'),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

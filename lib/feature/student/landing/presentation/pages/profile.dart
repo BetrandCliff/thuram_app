@@ -145,7 +145,11 @@ class ProfilePage extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () {
-                        nextScreen(context, ChatScreen());
+                        nextScreen(
+                            context,
+                            ChatScreen(
+                              receiverId: '5Mxd5oittENenIKHinmhvskxDaG3',
+                            ));
                       },
                       child: Container(
                         height: 50,

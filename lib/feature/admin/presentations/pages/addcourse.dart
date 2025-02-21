@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:thuram_app/util/custom-button.dart';
 import 'package:thuram_app/util/custom-input-form.dart';
@@ -8,6 +9,7 @@ import 'package:thuram_app/util/widthandheight.dart';
 
 import '../../../../core/constants/asset-paths.dart';
 import '../../../../core/constants/colors.dart';
+import '../model/course.dart';
 
 class AddCourse extends StatefulWidget {
   @override
@@ -16,7 +18,7 @@ class AddCourse extends StatefulWidget {
 
 class _AddCourseState extends State<AddCourse> {
 
-  final TextEditingController _couresController = TextEditingController();
+  final TextEditingController _courseController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   // final TextEditingController _confirmPasswordController = TextEditingController();
@@ -42,6 +44,43 @@ class _AddCourseState extends State<AddCourse> {
     // } else {
     //   // User canceled the picker
     // }
+  }
+
+  // File? _image; // Declare a variable for the image
+
+  // // Function to pick an image (you can implement this with file_picker)
+  // Future<void> _pickImage() async {
+  //   // Implement image picker functionality here
+  // }
+
+  // Function to handle the form submission and save data to Firestore
+  Future<void> _submitForm() async {
+    String courseName = _courseController.text;
+    String courseCode = _codeController.text;
+    String description = _descriptionController.text;
+
+    // Create a Course object
+    Course course = Course(
+      courseCode: courseCode,
+      courseName: courseName,
+      description: description,
+      imageUrl: null, // You can add logic to upload the image to Firebase Storage and get the URL
+    );
+
+    // Get the Firestore instance
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Add course to Firestore in the "courses" collection
+    try {
+      await firestore.collection('courses').add(course.toMap());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Course added successfully!")));
+      // Optionally, clear the fields after submission
+      _courseController.clear();
+      _codeController.clear();
+      _descriptionController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to add course: $e")));
+    }
   }
 
   @override
@@ -98,7 +137,7 @@ class _AddCourseState extends State<AddCourse> {
               ),
               const SizedBox(height: 20),
                CustomInputForm(
-                controller: _codeController,
+                controller: _courseController,
                 preIcon: Icons.person,
                 label: "Course Name",
                 hint: "programming concepts",
@@ -115,7 +154,7 @@ class _AddCourseState extends State<AddCourse> {
               const SizedBox(height: 20),
               CustomButton(
                 text: "Submit",
-                onTap: () {},
+                onTap: _submitForm,
                 // width: 250,
               ),
             ],

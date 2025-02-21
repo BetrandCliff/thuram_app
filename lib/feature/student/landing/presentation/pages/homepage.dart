@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/confersions.dart';
 
@@ -16,129 +18,253 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
             children: [
-              SizedBox(
-                height: 220,
-                width: double.infinity,
-                child: Card(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(buttonBorderRadius)),
-                  elevation: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+
+              // SizedBox(
+              //   height: 220,
+              //   width: double.infinity,
+              //   child: Card(
+              //     color: Colors.white,
+              //     shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(buttonBorderRadius)),
+              //     elevation: 3,
+              //     child: Padding(
+              //       padding: const EdgeInsets.all(8.0),
+              //       child: Column(
+              //         crossAxisAlignment: CrossAxisAlignment.start,
+              //         children: [
+              //           Row(
+              //             children: [
+              //               Container(
+              //                 width: 120, // Adjust size
+              //                 height: 120,
+              //                 decoration: BoxDecoration(
+              //                   shape: BoxShape.circle,
+              //                   boxShadow: [
+              //                     BoxShadow(
+              //                       color: Colors
+              //                           .grey.shade300, // Light grey shadow
+              //                       blurRadius: 10,
+              //                       spreadRadius: 4,
+              //                       offset: Offset(0, 4),
+              //                     ),
+              //                   ],
+              //                   border: Border.all(
+              //                     color: Colors.white, // White border
+              //                     width: 4,
+              //                   ),
+              //                 ),
+              //                 child: ClipOval(
+              //                   child: Image.asset(
+              //                     AppImages.profile, // Replace with your image
+              //                     fit: BoxFit.cover,
+              //                   ),
+              //                 ),
+              //               ),
+              //               Container(
+              //                 margin: const EdgeInsets.only(
+              //                   left: 20,
+              //                 ),
+              //                 child: Column(
+              //                   crossAxisAlignment: CrossAxisAlignment.start,
+              //                   children: [
+              //                     Text(
+              //                       "Folefac Thuram",
+              //                       style: Theme.of(context)
+              //                           .textTheme
+              //                           .titleMedium!
+              //                           .copyWith(fontSize: 20),
+              //                     ),
+              //                     Text(
+              //                       "(student)",
+              //                       style: Theme.of(context)
+              //                           .textTheme
+              //                           .displaySmall!
+              //                           .copyWith(fontSize: 14),
+              //                     ),
+              //                     Text(
+              //                       "@thuram",
+              //                       style: Theme.of(context)
+              //                           .textTheme
+              //                           .displaySmall!
+              //                           .copyWith(fontSize: 14),
+              //                     ),
+              //                     Container(
+              //                       margin: const EdgeInsets.only(top: 10),
+              //                       height: 70,
+              //                       width: 70,
+              //                       decoration: BoxDecoration(
+              //                           borderRadius: BorderRadius.circular(
+              //                               buttonBorderRadius),
+              //                           color: AppColors.primaryColor
+              //                               .withOpacity(0.6)),
+              //                       child: Center(
+              //                         child: Column(
+              //                           mainAxisAlignment:
+              //                               MainAxisAlignment.center,
+              //                           children: [
+              //                             Text(
+              //                               "4",
+              //                               style: Theme.of(context)
+              //                                   .textTheme
+              //                                   .displayMedium!
+              //                                   .copyWith(fontSize: 14),
+              //                             ),
+              //                             Text(
+              //                               "Post",
+              //                               style: Theme.of(context)
+              //                                   .textTheme
+              //                                   .displayMedium!
+              //                                   .copyWith(fontSize: 14),
+              //                             ),
+              //                           ],
+              //                         ),
+              //                       ),
+              //                     )
+              //                   ],
+              //                 ),
+              //               )
+              //             ],
+              //           ),
+              //           Container(
+              //             margin: EdgeInsets.only(top: 10),
+              //             height: 30,
+              //             child: 
+              //                 Text(
+              //                   "Watching the movies🎬",
+              //                   style:
+              //                       Theme.of(context).textTheme.displayMedium,
+              //                 ),
+                             
+                           
+              //           )
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
+
+SizedBox(
+  height: 220,
+  width: double.infinity,
+  child: Card(
+    color: Colors.white,
+    shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(buttonBorderRadius)),
+    elevation: 3,
+    child: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users') // Assuming your users are stored in the "users" collection
+            .doc(FirebaseAuth.instance.currentUser?.uid) // Get current user's document
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator()); // Loading state
+          }
+
+          var userData = snapshot.data!.data() as Map<String, dynamic>;
+          
+          // Get user details from the fetched data
+          String profilePic = userData['profilePic'] ?? AppImages.profile; // Default profile pic
+          String userName = userData['username'] ?? 'User Name';
+          String userRole = userData['email'] ?? 'Role not specified';
+          String userHandle = userData['username'] ?? 'username';
+          String userStatus = userData['status'] ?? 'No status available';
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 120, // Adjust size
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade300, // Light grey shadow
+                          blurRadius: 10,
+                          spreadRadius: 4,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white, // White border
+                        width: 4,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Image.network(
+                        profilePic, // Use the user's profile image URL
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset(AppImages.profile, fit: BoxFit.cover); // Default image on error
+                        },
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(left: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 120, // Adjust size
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors
-                                        .grey.shade300, // Light grey shadow
-                                    blurRadius: 10,
-                                    spreadRadius: 4,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                                border: Border.all(
-                                  color: Colors.white, // White border
-                                  width: 4,
-                                ),
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  AppImages.profile, // Replace with your image
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(
-                                left: 20,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Folefac Thuram",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium!
-                                        .copyWith(fontSize: 20),
-                                  ),
-                                  Text(
-                                    "(student)",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displaySmall!
-                                        .copyWith(fontSize: 14),
-                                  ),
-                                  Text(
-                                    "@thuram",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displaySmall!
-                                        .copyWith(fontSize: 14),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 10),
-                                    height: 70,
-                                    width: 70,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                            buttonBorderRadius),
-                                        color: AppColors.primaryColor
-                                            .withOpacity(0.6)),
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            "4",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .displayMedium!
-                                                .copyWith(fontSize: 14),
-                                          ),
-                                          Text(
-                                            "Post",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .displayMedium!
-                                                .copyWith(fontSize: 14),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ),
-                            )
-                          ],
+                        Text(
+                          userName,
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 20),
+                        ),
+                        Text(
+                          "($userRole)",
+                          style: Theme.of(context).textTheme.displaySmall!.copyWith(fontSize: 14),
+                        ),
+                        Text(
+                          "@$userHandle",
+                          style: Theme.of(context).textTheme.displaySmall!.copyWith(fontSize: 14),
                         ),
                         Container(
-                          margin: EdgeInsets.only(top: 10),
-                          height: 30,
-                          child: 
-                              Text(
-                                "Watching the movies🎬",
-                                style:
-                                    Theme.of(context).textTheme.displayMedium,
-                              ),
-                             
-                           
+                          margin: const EdgeInsets.only(top: 10),
+                          height: 70,
+                          width: 70,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(buttonBorderRadius),
+                              color: AppColors.primaryColor.withOpacity(0.6)),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "4", // This can be dynamic if you fetch the user's post count
+                                  style: Theme.of(context).textTheme.displayMedium!.copyWith(fontSize: 14),
+                                ),
+                                Text(
+                                  "Post",
+                                  style: Theme.of(context).textTheme.displayMedium!.copyWith(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
                         )
                       ],
                     ),
-                  ),
+                  )
+                ],
+              ),
+              Container(
+                margin: EdgeInsets.only(top: 10),
+                height: 30,
+                child: Text(
+                  userStatus, // Display the user's status
+                  style: Theme.of(context).textTheme.displayMedium,
                 ),
               ),
+            ],
+          );
+        },
+      ),
+    ),
+  ),
+),
 
               const SizedBox(height: 20),
 

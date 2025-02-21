@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/asset-paths.dart';
 import 'package:thuram_app/core/constants/colors.dart';
@@ -29,7 +30,8 @@ class _LandingPageState extends State<LandingPage> {
     HomePage(),
     Following(),
     SearchStaffScreen(),
-    CourseWidget(),
+    // staffId: FirebaseAuth.instance.currentUser!.uid??"5Mxd5oittENenIKHinmhvskxDaG3",
+    CourseWidget( ),
     
     CustomDescriptionCard(),
     

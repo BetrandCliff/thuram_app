@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/asset-paths.dart';
 
+import 'feature/chat/push_notification.dart';
 import 'feature/student/login/presentation/login.dart';
 import 'feature/student/login/presentation/signup.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+    @override
+  void initState() {
+    super.initState();
+    PushNotificationService().initialize();
+  }
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(

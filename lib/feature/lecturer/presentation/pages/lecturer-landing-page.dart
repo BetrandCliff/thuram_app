@@ -1,12 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/asset-paths.dart';
 import 'package:thuram_app/core/constants/colors.dart';
 import 'package:thuram_app/feature/student/landing/presentation/pages/homepage.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/lost_and_found.dart';
 import 'package:thuram_app/util/drawer.dart';
+import 'package:thuram_app/util/next-screen.dart';
 
 import '../../../../../core/constants/values.dart';
 import '../../../../../util/custom-description-card.dart';
+import '../../../chat/chat-gpt.dart';
 import '../../../student/landing/presentation/pages/courses.dart';
 import '../../../student/landing/presentation/pages/following.dart';
 import '../../../student/landing/presentation/pages/search-staff.dart';
@@ -22,14 +25,18 @@ GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
 
 class _LecturerLandingPageState extends State<LecturerLandingPage> {
   final List<Widget> Pages = [
-   const HomePage(),
-   const Following(),
+    const HomePage(),
+    const Following(),
     // SearchStaffScreen(),
-    CourseWidget(isStudent: false,),
-   const CustomDescriptionCard(),
+    //  staffId: FirebaseAuth.instance.currentUser!.uid??"",
+    CourseWidget(
+      isStudent: false,
+     
+    ),
+    const CustomDescriptionCard(),
   ];
 
-  final List<String> ScreenTitle = ['Home',"Follow","Courses","Profile"];
+  final List<String> ScreenTitle = ['Home', "Follow", "Courses", "Profile"];
   @override
   void initState() {
     // TODO: implement initState
@@ -55,7 +62,13 @@ class _LecturerLandingPageState extends State<LecturerLandingPage> {
               },
               icon: Icon(Icons.menu)),
           centerTitle: true,
-          title: Text(ScreenTitle[_selectedIndex],style: Theme.of(context).textTheme.displayMedium!.copyWith(fontWeight: FontWeight.w900),),
+          title: Text(
+            ScreenTitle[_selectedIndex],
+            style: Theme.of(context)
+                .textTheme
+                .displayMedium!
+                .copyWith(fontWeight: FontWeight.w900),
+          ),
           // title: Image.asset(
           //   AppImages.logo,
           //   width: 25,
@@ -131,7 +144,9 @@ class _LecturerLandingPageState extends State<LecturerLandingPage> {
         ),
         floatingActionButton: ClipOval(
             child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            nextScreen(context, ChatScreen());
+          },
           child: Icon(Icons.chat),
         )),
       ),

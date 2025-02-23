@@ -19,40 +19,82 @@ class _FollowingState extends State<Following>
   String _headerText = "Following";
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String currentUserId = "currentUserId"; // Replace with logged-in user's ID
 
-  List<Map<String, String>> filteredFollowersList = [];
-  List<Map<String, String>> filteredFollowingList = [];
-  bool isLoading = true; // Loading state
+  List<Map<String, dynamic>> filteredFollowersList = [];
+  List<Map<String, dynamic>> filteredFollowingList = [];
+  List<Map<String, dynamic>> suggestedUsersList = [];
+  bool isLoading = true;
 
   Future<void> fetchFollowerList() async {
     setState(() {
-      isLoading = true; // Start loading
+      isLoading = true;
     });
 
     try {
-      QuerySnapshot snapshot = await _firestore.collection('users').get();
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(currentUserId).get();
+      List<String> followingIds = List<String>.from(userDoc['following'] ?? []);
+      List<String> followerIds = List<String>.from(userDoc['followers'] ?? []);
+
+      QuerySnapshot? followingSnapshot;
+      if (followingIds.isNotEmpty) {
+        followingSnapshot = await _firestore
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: followingIds)
+            .get();
+      }
+
+      QuerySnapshot? followerSnapshot;
+      if (followerIds.isNotEmpty) {
+        followerSnapshot = await _firestore
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: followerIds)
+            .get();
+      }
+
+      QuerySnapshot suggestedSnapshot = await _firestore
+          .collection('users')
+          .where(FieldPath.documentId,
+              whereNotIn: [currentUserId, ...followingIds])
+          .limit(5)
+          .get();
 
       setState(() {
-        filteredFollowersList = snapshot.docs.map((doc) {
+        filteredFollowingList = followingSnapshot != null
+            ? followingSnapshot.docs.map((doc) {
+                return {
+                  'id': doc.id,
+                  'username': doc['username'],
+                  'email': doc['email'],
+                } as Map<String, dynamic>;
+              }).toList()
+            : [];
+
+        filteredFollowersList = followerSnapshot != null
+            ? followerSnapshot.docs.map((doc) {
+                return {
+                  'id': doc.id,
+                  'username': doc['username'],
+                  'email': doc['email'],
+                } as Map<String, dynamic>;
+              }).toList()
+            : [];
+
+        suggestedUsersList = suggestedSnapshot.docs.map((doc) {
           return {
-            'username': doc['username'] as String,
-            'email': doc['email'] as String,
-          };
+            'id': doc.id,
+            'username': doc['username'],
+            'email': doc['email'],
+          } as Map<String, dynamic>;
         }).toList();
 
-        filteredFollowingList = snapshot.docs.map((doc) {
-          return {
-            'username': doc['username'] as String,
-            'email': doc['email'] as String,
-          };
-        }).toList();
-
-        isLoading = false; // Stop loading
+        isLoading = false;
       });
     } catch (e) {
       print("Error fetching followers: $e");
       setState(() {
-        isLoading = false; // Stop loading on error
+        isLoading = false;
       });
     }
   }
@@ -60,8 +102,7 @@ class _FollowingState extends State<Following>
   @override
   void initState() {
     super.initState();
-    fetchFollowerList(); // Fetch followers on init
-
+    fetchFollowerList();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       setState(() {
@@ -70,74 +111,80 @@ class _FollowingState extends State<Following>
     });
   }
 
+  void _followUser(String userId) async {
+    try {
+      await _firestore.collection('users').doc(currentUserId).update({
+        "following": FieldValue.arrayUnion([userId])
+      });
+      await _firestore.collection('users').doc(userId).update({
+        "followers": FieldValue.arrayUnion([currentUserId])
+      });
+      fetchFollowerList();
+    } catch (e) {
+      print("Error following user: $e");
+    }
+  }
+
+  void _unfollowUser(String userId) async {
+    try {
+      await _firestore.collection('users').doc(currentUserId).update({
+        "following": FieldValue.arrayRemove([userId])
+      });
+      await _firestore.collection('users').doc(userId).update({
+        "followers": FieldValue.arrayRemove([currentUserId])
+      });
+      fetchFollowerList();
+    } catch (e) {
+      print("Error unfollowing user: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: SizedBox(
-        height: height(context),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TabBar(
-              controller: _tabController,
-              labelColor: Colors.red,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.red,
-              dividerColor: Colors.transparent,
-              tabs: [
-                Tab(text: "Following"),
-                Tab(text: "Follower"),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                onChanged: _filterList,
-                decoration: InputDecoration(
-                  hintText: 'Search',
-                  hintStyle: Theme.of(context).textTheme.displaySmall,
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+      child: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            labelColor: Colors.red,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Colors.red,
+            tabs: [Tab(text: "Following"), Tab(text: "Follower")],
+          ),
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      Column(
+                        children: [
+                          filteredFollowingList.isNotEmpty
+                              ? Expanded(
+                                  child: _buildUserList(
+                                      filteredFollowingList, true))
+                              : Center(
+                                  child:
+                                      Text("You're not following anyone yet.")),
+                          Text("Suggested Users"),
+                          Expanded(
+                              child: _buildUserList(suggestedUsersList, false)),
+                        ],
+                      ),
+                      _buildUserList(filteredFollowersList, false),
+                    ],
                   ),
-                ),
-              ),
-            ),
-            Text(
-              _headerText,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontWeight: FontWeight.bold),
-            ),
-            Expanded(
-              child: isLoading
-                  ? Center(
-                      child:
-                          CircularProgressIndicator()) // Show loading spinner
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildUserList(filteredFollowingList, true),
-                        _buildUserList(filteredFollowersList, false),
-                      ],
-                    ),
-            ),
-            Text("Suggested for you"),
-            for (int i = 0; i < filteredFollowersList.length; i++)
-              _buildSuggestedUser(filteredFollowersList[i]),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // Build the list of users
-  Widget _buildUserList(List<Map<String, String>> list, bool isFollowing) {
+  Widget _buildUserList(List<Map<String, dynamic>> list, bool isFollowing) {
     return ListView.builder(
-      itemCount: 2,
-      // itemCount: list.length,
+      shrinkWrap: true,
+      itemCount: list.length,
       itemBuilder: (context, index) {
         final user = list[index];
         return _buildFollowerItem(user, isFollowing);
@@ -145,164 +192,315 @@ class _FollowingState extends State<Following>
     );
   }
 
-  // Build a follower item (both for Following and Follower)
-  Widget _buildFollowerItem(Map<String, String> item, bool isFollowing) {
-    return GestureDetector(
-      onTap: () {
-        nextScreen(context, ProfilePage());
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.all(0),
-                leading: CircleAvatar(
-                  radius: 30,
-                  backgroundImage: item['image'] != null
-                      ? NetworkImage(item['image']!)
-                      : AssetImage(AppImages.profile),
-                ),
-                title: Text(item['username']!),
-                subtitle: Row(
-                  children: [
-                    // Text(item['level']!),
-                    Container(
-                      margin: EdgeInsets.only(left: 5, right: 5),
-                      width: 15,
-                      height: 15,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Colors.black,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.done,
-                          size: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    Text(isFollowing ? "following" : "follower"),
-                  ],
-                ),
-                trailing: ElevatedButton(
-                  onPressed: () {
-                    // Handle follow/unfollow logic based on the tab
-                    if (isFollowing) {
-                      _unfollowUser(item['email']!);
-                    } else {
-                      _followUser(item['email']!);
-                    }
-                  },
-                  child: Text(isFollowing ? 'Unfollow' : 'Follow'),
-                ),
-              ),
-            ],
-          ),
-        ),
+  Widget _buildFollowerItem(Map<String, dynamic> item, bool isFollowing) {
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 30,
+        backgroundImage: AssetImage(AppImages.profile),
+      ),
+      title: Text(item['username']!),
+      subtitle: Text(isFollowing ? "Following" : "Suggested"),
+      trailing: ElevatedButton(
+        onPressed: () {
+          isFollowing ? _unfollowUser(item['id']!) : _followUser(item['id']!);
+        },
+        child: Text(isFollowing ? 'Unfollow' : 'Follow'),
       ),
     );
-  }
-
-  // Build a suggested user item with a follow button
-  Widget _buildSuggestedUser(Map<String, String> item) {
-    return GestureDetector(
-      onTap: () {
-        nextScreen(context, ProfilePage());
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              ListTile(
-                trailing: Container(
-                  width: 60,
-                  height: 40,
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black, width: 1),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Center(child: Text("Follow")),
-                ),
-                contentPadding: EdgeInsets.all(0),
-                leading: CircleAvatar(
-                  radius: 30,
-                  backgroundImage: item['image'] != null
-                      ? NetworkImage(item['image']!)
-                      : AssetImage(AppImages.profile),
-                ),
-                title: Text(item['username']!),
-                subtitle: Row(
-                  children: [
-                    // Text(item['level']!),
-                    Container(
-                      margin: EdgeInsets.only(left: 5, right: 5),
-                      width: 15,
-                      height: 15,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Colors.black,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.done,
-                          size: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    Text("suggested"),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _followUser(String email) {
-    // Logic to follow the user
-    print("Following $email");
-  }
-
-  void _unfollowUser(String email) {
-    // Logic to unfollow the user
-    print("Unfollowing $email");
-  }
-
-  // Filter the followers and following lists based on search query
-  void _filterList(String query) {
-    setState(() {
-      filteredFollowersList = filteredFollowersList.where((follower) {
-        final nameLower = follower['username']!.toLowerCase();
-        final emailLower = follower['email']!.toLowerCase();
-        // final levelLower = follower['level']!.toLowerCase();
-        final searchLower = query.toLowerCase();
-        return nameLower.contains(searchLower) ||
-            emailLower.contains(searchLower);
-        //  ||
-        // levelLower.contains(searchLower);
-      }).toList();
-
-      filteredFollowingList = filteredFollowingList.where((follower) {
-        final nameLower = follower['username']!.toLowerCase();
-        final emailLower = follower['email']!.toLowerCase();
-        // final levelLower = follower['level']!.toLowerCase();
-        final searchLower = query.toLowerCase();
-        return nameLower.contains(searchLower) ||
-            emailLower.contains(searchLower);
-        // ||
-        // levelLower.contains(searchLower);
-      }).toList();
-    });
   }
 }
+
+
+// class _FollowingState extends State<Following>
+//     with SingleTickerProviderStateMixin {
+//   late TabController _tabController;
+//   String _headerText = "Following";
+
+//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+//   List<Map<String, String>> filteredFollowersList = [];
+//   List<Map<String, String>> filteredFollowingList = [];
+//   bool isLoading = true; // Loading state
+
+//   Future<void> fetchFollowerList() async {
+//     setState(() {
+//       isLoading = true; // Start loading
+//     });
+
+//     try {
+//       QuerySnapshot snapshot = await _firestore.collection('users').get();
+
+//       setState(() {
+//         filteredFollowersList = snapshot.docs.map((doc) {
+//           return {
+//             'username': doc['username'] as String,
+//             'email': doc['email'] as String,
+//           };
+//         }).toList();
+
+//         filteredFollowingList = snapshot.docs.map((doc) {
+//           return {
+//             'username': doc['username'] as String,
+//             'email': doc['email'] as String,
+//           };
+//         }).toList();
+
+//         isLoading = false; // Stop loading
+//       });
+//     } catch (e) {
+//       print("Error fetching followers: $e");
+//       setState(() {
+//         isLoading = false; // Stop loading on error
+//       });
+//     }
+//   }
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     fetchFollowerList(); // Fetch followers on init
+
+//     _tabController = TabController(length: 2, vsync: this);
+//     _tabController.addListener(() {
+//       setState(() {
+//         _headerText = _tabController.index == 0 ? "Following" : "Follower";
+//       });
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return DefaultTabController(
+//       length: 2,
+//       child: SizedBox(
+//         height: height(context),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             TabBar(
+//               controller: _tabController,
+//               labelColor: Colors.red,
+//               unselectedLabelColor: Colors.grey,
+//               indicatorColor: Colors.red,
+//               dividerColor: Colors.transparent,
+//               tabs: [
+//                 Tab(text: "Following"),
+//                 Tab(text: "Follower"),
+//               ],
+//             ),
+//             Padding(
+//               padding: const EdgeInsets.all(16.0),
+//               child: TextField(
+//                 onChanged: _filterList,
+//                 decoration: InputDecoration(
+//                   hintText: 'Search',
+//                   hintStyle: Theme.of(context).textTheme.displaySmall,
+//                   prefixIcon: Icon(Icons.search),
+//                   border: OutlineInputBorder(
+//                     borderRadius: BorderRadius.circular(8.0),
+//                   ),
+//                 ),
+//               ),
+//             ),
+//             Text(
+//               _headerText,
+//               style: Theme.of(context)
+//                   .textTheme
+//                   .bodyMedium!
+//                   .copyWith(fontWeight: FontWeight.bold),
+//             ),
+//             Expanded(
+//               child: isLoading
+//                   ? Center(
+//                       child:
+//                           CircularProgressIndicator()) // Show loading spinner
+//                   : TabBarView(
+//                       controller: _tabController,
+//                       children: [
+//                         _buildUserList(filteredFollowingList, true),
+//                         _buildUserList(filteredFollowersList, false),
+//                       ],
+//                     ),
+//             ),
+//             Text("Suggested for you"),
+//             for (int i = 0; i < filteredFollowersList.length; i++)
+//               _buildSuggestedUser(filteredFollowersList[i]),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   // Build the list of users
+//   Widget _buildUserList(List<Map<String, String>> list, bool isFollowing) {
+//     return ListView.builder(
+//       itemCount: 2,
+//       // itemCount: list.length,
+//       itemBuilder: (context, index) {
+//         final user = list[index];
+//         return _buildFollowerItem(user, isFollowing);
+//       },
+//     );
+//   }
+
+//   // Build a follower item (both for Following and Follower)
+//   Widget _buildFollowerItem(Map<String, String> item, bool isFollowing) {
+//     return GestureDetector(
+//       onTap: () {
+//         nextScreen(context, ProfilePage());
+//       },
+//       child: Container(
+//         margin: const EdgeInsets.symmetric(vertical: 10),
+//         child: Padding(
+//           padding: const EdgeInsets.all(8.0),
+//           child: Column(
+//             children: [
+//               ListTile(
+//                 contentPadding: EdgeInsets.all(0),
+//                 leading: CircleAvatar(
+//                   radius: 30,
+//                   backgroundImage: item['image'] != null
+//                       ? NetworkImage(item['image']!)
+//                       : AssetImage(AppImages.profile),
+//                 ),
+//                 title: Text(item['username']!),
+//                 subtitle: Row(
+//                   children: [
+//                     // Text(item['level']!),
+//                     Container(
+//                       margin: EdgeInsets.only(left: 5, right: 5),
+//                       width: 15,
+//                       height: 15,
+//                       decoration: BoxDecoration(
+//                         borderRadius: BorderRadius.circular(15),
+//                         color: Colors.black,
+//                       ),
+//                       child: Center(
+//                         child: Icon(
+//                           Icons.done,
+//                           size: 12,
+//                           color: Colors.white,
+//                         ),
+//                       ),
+//                     ),
+//                     Text(isFollowing ? "following" : "follower"),
+//                   ],
+//                 ),
+//                 trailing: ElevatedButton(
+//                   onPressed: () {
+//                     // Handle follow/unfollow logic based on the tab
+//                     if (isFollowing) {
+//                       _unfollowUser(item['email']!);
+//                     } else {
+//                       _followUser(item['email']!);
+//                     }
+//                   },
+//                   child: Text(isFollowing ? 'Unfollow' : 'Follow'),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   // Build a suggested user item with a follow button
+//   Widget _buildSuggestedUser(Map<String, String> item) {
+//     return GestureDetector(
+//       onTap: () {
+//         nextScreen(context, ProfilePage());
+//       },
+//       child: Container(
+//         margin: const EdgeInsets.symmetric(vertical: 10),
+//         child: Padding(
+//           padding: const EdgeInsets.all(8.0),
+//           child: Column(
+//             children: [
+//               ListTile(
+//                 trailing: Container(
+//                   width: 60,
+//                   height: 40,
+//                   decoration: BoxDecoration(
+//                       border: Border.all(color: Colors.black, width: 1),
+//                       borderRadius: BorderRadius.circular(10)),
+//                   child: Center(child: Text("Follow")),
+//                 ),
+//                 contentPadding: EdgeInsets.all(0),
+//                 leading: CircleAvatar(
+//                   radius: 30,
+//                   backgroundImage: item['image'] != null
+//                       ? NetworkImage(item['image']!)
+//                       : AssetImage(AppImages.profile),
+//                 ),
+//                 title: Text(item['username']!),
+//                 subtitle: Row(
+//                   children: [
+//                     // Text(item['level']!),
+//                     Container(
+//                       margin: EdgeInsets.only(left: 5, right: 5),
+//                       width: 15,
+//                       height: 15,
+//                       decoration: BoxDecoration(
+//                         borderRadius: BorderRadius.circular(15),
+//                         color: Colors.black,
+//                       ),
+//                       child: Center(
+//                         child: Icon(
+//                           Icons.done,
+//                           size: 12,
+//                           color: Colors.white,
+//                         ),
+//                       ),
+//                     ),
+//                     Text("suggested"),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _followUser(String email) {
+//     // Logic to follow the user
+//     print("Following $email");
+//   }
+
+//   void _unfollowUser(String email) {
+//     // Logic to unfollow the user
+//     print("Unfollowing $email");
+//   }
+
+//   // Filter the followers and following lists based on search query
+//   void _filterList(String query) {
+//     setState(() {
+//       filteredFollowersList = filteredFollowersList.where((follower) {
+//         final nameLower = follower['username']!.toLowerCase();
+//         final emailLower = follower['email']!.toLowerCase();
+//         // final levelLower = follower['level']!.toLowerCase();
+//         final searchLower = query.toLowerCase();
+//         return nameLower.contains(searchLower) ||
+//             emailLower.contains(searchLower);
+//         //  ||
+//         // levelLower.contains(searchLower);
+//       }).toList();
+
+//       filteredFollowingList = filteredFollowingList.where((follower) {
+//         final nameLower = follower['username']!.toLowerCase();
+//         final emailLower = follower['email']!.toLowerCase();
+//         // final levelLower = follower['level']!.toLowerCase();
+//         final searchLower = query.toLowerCase();
+//         return nameLower.contains(searchLower) ||
+//             emailLower.contains(searchLower);
+//         // ||
+//         // levelLower.contains(searchLower);
+//       }).toList();
+//     });
+//   }
+// }
 
 
 // class _FollowingState extends State<Following>

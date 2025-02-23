@@ -12,7 +12,6 @@ import '../../../lecturer/presentation/pages/lecturer-landing-page.dart';
 import 'model/user.dart';
 
 class SignupForm extends StatefulWidget {
-
   @override
   State<SignupForm> createState() => _SignupFormState();
 }
@@ -21,7 +20,8 @@ class _SignupFormState extends State<SignupForm> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   //  Future<void> _signup() async {
   //   if (_passwordController.text != _confirmPasswordController.text) {
@@ -53,60 +53,64 @@ class _SignupFormState extends State<SignupForm> {
   //   }
   // }
 
-
-
-Future<void> _signup() async {
-  if (_passwordController.text != _confirmPasswordController.text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Passwords do not match.')),
-    );
-    return;
-  }
-
-  try {
-    // Create the user with Firebase Authentication
-    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-
-    // Get the user ID
-    String userId = userCredential.user!.uid;
-
-    // Create a UserModel instance
-    UserModel userModel = UserModel(
-      email: _emailController.text.trim(),
-      username: _usernameController.text.trim(),
-      userId: userId,
-      confess: null, // Initially null, you can later update this field
-      lostItems: [], // Empty list initially, you can add items later
-    );
-
-    // Save the user model to Firestore
-    await FirebaseFirestore.instance.collection('users').doc(userId).set(userModel.toMap());
-
-    // Navigate to the appropriate landing page
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => _emailController.text.trim().contains("admin")
-            ? AdminLandingPage()
-            : _emailController.text.trim().contains("staff")
-                ? LecturerLandingPage()
-                : LandingPage(),
-      ),
-    );
-  } on FirebaseAuthException catch (e) {
-    String message = "An error occurred. Please try again.";
-    if (e.code == 'email-already-in-use') {
-      message = 'The account already exists for that email.';
-    } else if (e.code == 'weak-password') {
-      message = 'The password provided is too weak.';
+  Future<void> _signup() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwords do not match.')),
+      );
+      return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+
+    try {
+      // Create the user with Firebase Authentication
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // Get the user ID
+      String userId = userCredential.user!.uid;
+
+      // Create a UserModel instance
+      UserModel userModel = UserModel(
+          email: _emailController.text.trim(),
+          username: _usernameController.text.trim(),
+          userId: userId,
+          confess: null, // Initially null, you can later update this field
+          lostItems: [],
+          followers: [],
+          following: [] // Empty list initially, you can add items later
+          );
+
+      // Save the user model to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .set(userModel.toMap());
+
+      // Navigate to the appropriate landing page
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => _emailController.text.trim().contains("admin")
+              ? AdminLandingPage()
+              : _emailController.text.trim().contains("staff")
+                  ? LecturerLandingPage()
+                  : LandingPage(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = "An error occurred. Please try again.";
+      if (e.code == 'email-already-in-use') {
+        message = 'The account already exists for that email.';
+      } else if (e.code == 'weak-password') {
+        message = 'The password provided is too weak.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -152,10 +156,7 @@ Future<void> _signup() async {
             SizedBox(
               height: 20,
             ),
-            CustomButton(
-              text: 'Register',
-              onTap:_signup
-            )
+            CustomButton(text: 'Register', onTap: _signup)
           ],
         ),
       ),

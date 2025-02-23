@@ -94,7 +94,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Uri.parse(endpoint),
           headers: {
             'Content-Type': "application/json",
-            "Authorization": "Bearer ${dotenv.env['token']}",
+            "Authorization": "Bearer \${dotenv.env['token']}",
           },
           body: json.encode({
             "model": "gpt-4o",

@@ -283,7 +283,9 @@ class _CourseWidgetState extends State<CourseWidget> {
       ),
       body: courses.length == 0
           ? Center(
-              child: Text("No Course Assigned "),
+              child: Text(widget.isStudent
+                  ? "No  Registered Courses"
+                  : "No Course Assigned "),
             )
           : ListView.builder(
               itemCount: courses.length,

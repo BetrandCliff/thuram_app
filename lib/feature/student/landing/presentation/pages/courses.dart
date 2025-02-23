@@ -144,63 +144,165 @@ class _CourseWidgetState extends State<CourseWidget> {
     super.initState();
     courses = [];
     print("\n\nFetching courses");
+    widget.isStudent?fetchCoursesForStudent():
     fetchCoursesByCurrentUser();
+
   }
 
-  // Future<void> fetchCourses() async {
-  //   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-  //   QuerySnapshot snapshot;
-  //   List<Course> fetchedCourses = [];
-  //   print("current staff id ${currentUserId}");
-  //   try {
-  //     // Fetch the staff document
-  //     DocumentSnapshot staffSnapshot = await FirebaseFirestore.instance
-  //         .collection('staff')
-  //         .doc(currentUserId) // Fetch the current staff document
-  //         .get();
+  /*
+Future<void> fetchCoursesByCurrentUser() async {
+  print("FETCHING COURSES");
+  String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+  print("CURRENT USER EMAIL IS $currentUserEmail");
+  if (currentUserEmail.isEmpty) {
+    print("No user is currently logged in");
+    return;
+  }
 
-  //     // Check if the staff document exists
-  //     if (staffSnapshot.exists) {
-  //       // Cast the staff data to a Map<String, dynamic> and get the list of course IDs from the 'courses' field
-  //       Map<String, dynamic> staffData =
-  //           staffSnapshot.data() as Map<String, dynamic>;
-  //       List<String> assignedCourses = staffData['courses'] ?? [];
+  List<Course> fetchedCourses = [];
+  print("Fetching courses for current user with email: $currentUserEmail");
 
-  //       if (assignedCourses.isNotEmpty) {
-  //         // Fetch courses based on the list of course IDs in the 'courses' field
-  //         snapshot = await FirebaseFirestore.instance
-  //             .collection('courses')
-  //             .where(FieldPath.documentId,
-  //                 whereIn: assignedCourses) // Get courses by IDs
-  //             .get();
+  try {
+    // Fetch the student document based on the current user's email
+    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users') // Assuming a 'users' collection exists
+        .where('email', isEqualTo: currentUserEmail)
+        .get();
 
-  //         // Map the results to a list of Course objects
-  //         fetchedCourses = snapshot.docs.map((doc) {
-  //           return Course(
-  //             courseName: doc['courseName'],
-  //             courseCode: doc['courseCode'],
-  //             description: doc['description'],
-  //             // Add other fields if necessary
-  //           );
-  //         }).toList();
-  //       } else {
-  //         // If no courses are assigned to the staff, set an empty list
-  //         fetchedCourses = [];
-  //       }
-  //     } else {
-  //       print("Staff document not found");
-  //     }
+    if (userSnapshot.docs.isNotEmpty) {
+      DocumentSnapshot userDoc = userSnapshot.docs.first;
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
-  //     // Update the UI with the fetched courses
-  //     setState(() {
-  //       courses = fetchedCourses;
-  //     });
-  //   } catch (e) {
-  //     print("Error fetching courses: $e");
-  //     ScaffoldMessenger.of(context)
-  //         .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
-  //   }
-  // }
+      // Assuming you have a 'role' field to distinguish between staff and student
+      String role = userData['role'] ?? 'student'; // Default to student if role is missing
+      print("USER ROLE IS $role");
+
+      if (role == 'student') {
+        // Fetch registered courses for student
+        String userId = FirebaseAuth.instance.currentUser!.uid;
+        // Fetch all the courses the student is registered for from the 'registrations/{userId}/courses' collection
+        QuerySnapshot courseSnapshot = await FirebaseFirestore.instance
+            .collection('registrations')
+            .doc(userId)
+            .collection('courses')
+            .get();
+
+        if (courseSnapshot.docs.isNotEmpty) {
+          // Fetch courses details for each registered course
+          var courseFutures = courseSnapshot.docs.map((doc) async {
+            String courseId = doc['courseId'];
+            // Fetch the course details from the 'courses' collection
+            DocumentSnapshot courseDoc = await FirebaseFirestore.instance
+                .collection('courses')
+                .doc(courseId)
+                .get();
+
+            if (courseDoc.exists) {
+              Map<String, dynamic> courseData = courseDoc.data() as Map<String, dynamic>;
+              return Course(
+                courseName: courseData['courseName'] ?? 'Unknown Course',
+                courseCode: courseData['courseCode'] ?? 'Unknown Code',
+                description: courseData['description'] ?? 'No description available',
+              );
+            }
+            return null; // If course document does not exist, return null
+          }).where((course) => course != null); // Filter out null courses
+
+          // Wait for all the course futures to complete and collect them in a list
+          fetchedCourses = (await Future.wait(courseFutures)).whereType<Course>().toList();
+        } else {
+          fetchedCourses = [];
+        }
+      } else {
+        print("User role is not student, skipping course fetch");
+        fetchedCourses = [];
+      }
+    } else {
+      print("User document not found for email: $currentUserEmail");
+    }
+
+    // Update the UI with the fetched courses
+    setState(() {
+      courses = fetchedCourses;
+    });
+  } catch (e) {
+    print("Error fetching courses: $e");
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
+  }
+}
+*/
+
+Future<void> fetchCoursesForStudent() async {
+  String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+  if (currentUserEmail.isEmpty) {
+    print("No user is currently logged in");
+    return;
+  }
+
+  List<Course> fetchedCourses = [];
+  try {
+    // Fetch the student document based on the current user's email
+    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users') // Assuming a 'users' collection exists
+        .where('email', isEqualTo: currentUserEmail)
+        .get();
+
+    if (userSnapshot.docs.isNotEmpty) {
+      DocumentSnapshot userDoc = userSnapshot.docs.first;
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+      // Assuming the role is 'student' and we're dealing with a student
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+
+      // Fetch all the courses the student is registered for
+      QuerySnapshot courseSnapshot = await FirebaseFirestore.instance
+          .collection('registrations')
+          .doc(userId)
+          .collection('courses')
+          .get();
+
+      if (courseSnapshot.docs.isNotEmpty) {
+        // Fetch course details for each registered course
+        var courseFutures = courseSnapshot.docs.map((doc) async {
+          String courseId = doc['courseId'];
+          // Fetch the course details from the 'courses' collection
+          DocumentSnapshot courseDoc = await FirebaseFirestore.instance
+              .collection('courses')
+              .doc(courseId)
+              .get();
+
+          if (courseDoc.exists) {
+            Map<String, dynamic> courseData = courseDoc.data() as Map<String, dynamic>;
+            return Course(
+              courseName: courseData['courseName'] ?? 'Unknown Course',
+              courseCode: courseData['courseCode'] ?? 'Unknown Code',
+              description: courseData['description'] ?? 'No description available',
+            );
+          }
+          return null; // If course document does not exist, return null
+        }).where((course) => course != null); // Filter out null courses
+
+        // Wait for all the course futures to complete and collect them in a list
+        fetchedCourses = (await Future.wait(courseFutures)).whereType<Course>().toList();
+      } else {
+        fetchedCourses = [];
+      }
+    } else {
+      print("User document not found for email: $currentUserEmail");
+    }
+
+    // Update the UI with the fetched courses
+    setState(() {
+      courses = fetchedCourses;
+    });
+  } catch (e) {
+    print("Error fetching courses for student: $e");
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
+  }
+}
+
 
   Future<void> fetchCoursesByCurrentUser() async {
     print("FETCHING COURSES");
@@ -273,7 +375,7 @@ class _CourseWidgetState extends State<CourseWidget> {
           .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
     }
   }
-
+// */
   @override
   Widget build(BuildContext context) {
     return Scaffold(

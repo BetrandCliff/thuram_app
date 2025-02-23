@@ -23,36 +23,6 @@ class _SignupFormState extends State<SignupForm> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
-  //  Future<void> _signup() async {
-  //   if (_passwordController.text != _confirmPasswordController.text) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Passwords do not match.')),
-  //     );
-  //     return;
-  //   }
-
-  //   try {
-  //     await FirebaseAuth.instance.createUserWithEmailAndPassword(
-  //       email: _emailController.text.trim(),
-  //       password: _passwordController.text.trim(),
-  //     );
-  //     // Navigate to LandingPage on success
-  //     Navigator.of(context).pushReplacement(
-  //       MaterialPageRoute(builder: (context) =>_emailController.text.trim().contains("admin")?AdminLandingPage():_emailController.text.trim().contains("staff")?LecturerLandingPage():LandingPage()),
-  //     );
-  //   } on FirebaseAuthException catch (e) {
-  //     String message = "An error occurred. Please try again.";
-  //     if (e.code == 'email-already-in-use') {
-  //       message = 'The account already exists for that email.';
-  //     } else if (e.code == 'weak-password') {
-  //       message = 'The password provided is too weak.';
-  //     }
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text(message)),
-  //     );
-  //   }
-  // }
-
   Future<void> _signup() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,10 +47,12 @@ class _SignupFormState extends State<SignupForm> {
           email: _emailController.text.trim(),
           username: _usernameController.text.trim(),
           userId: userId,
-          confess: null, // Initially null, you can later update this field
+          role: _emailController.text.trim().contains("admin")?"admin":_emailController.text.trim().contains("staff")?"staff":"student" ,
+          confess: [], // Initially null, you can later update this field
           lostItems: [],
           followers: [],
-          following: [] // Empty list initially, you can add items later
+          following: [],
+          // courses: [] // Empty list initially, you can add items later
           );
 
       // Save the user model to Firestore

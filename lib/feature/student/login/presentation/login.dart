@@ -46,33 +46,35 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Column(
-        children: [
-          SizedBox(
-            height: 20,
-          ),
-          CustomInputForm(
-            controller: _emailController,
-            preIcon: Icons.email,
-            hint: "Email Address",
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          CustomInputForm(
-            controller: _passwordController,
-            preIcon: Icons.lock,
-            sufIcon: Icons.visibility_off,
-            hint: "Password",
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          CustomButton(
-            text: 'Login',
-            onTap: _login
-          )
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 20,
+            ),
+            CustomInputForm(
+              controller: _emailController,
+              preIcon: Icons.email,
+              hint: "Email Address",
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            CustomInputForm(
+              controller: _passwordController,
+              preIcon: Icons.lock,
+              sufIcon: Icons.visibility_off,
+              hint: "Password",
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            CustomButton(
+              text: 'Login',
+              onTap: _login
+            )
+          ],
+        ),
       ),
     );
   }

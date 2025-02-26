@@ -13,11 +13,12 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-    @override
+  @override
   void initState() {
     super.initState();
     PushNotificationService().initialize();
   }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -38,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      "GUCONNECT",
+                      "RHIBMS_GUC",
                       style: Theme.of(context)
                           .textTheme
                           .displayMedium!

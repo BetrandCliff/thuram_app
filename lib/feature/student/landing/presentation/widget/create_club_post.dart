@@ -1,20 +1,23 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:thuram_app/util/next-screen.dart';
 /*
-class PostLostFoundScreen extends StatefulWidget {
-  const PostLostFoundScreen({super.key});
+class CreateClubPostScreen extends StatefulWidget {
+  const CreateClubPostScreen({super.key});
 
   @override
-  _PostLostFoundScreenState createState() => _PostLostFoundScreenState();
+  _CreateClubPostScreenState createState() => _CreateClubPostScreenState();
 }
 
-class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
+class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
   TextEditingController messageController = TextEditingController();
 
-  Future<void> postLostFoundItem() async {
+  Future<void> clubPost() async {
     String message = messageController.text.trim();
     if (message.isEmpty) {
       return;
@@ -24,7 +27,7 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
     String profilePic = FirebaseAuth.instance.currentUser?.photoURL ?? 'https://example.com/default_profile_pic.jpg'; // Replace with a default profile picture URL
 
     try {
-      await FirebaseFirestore.instance.collection('lostFoundPosts').add({
+      await FirebaseFirestore.instance.collection('clubPost').add({
         'userName': userName,
         'profilePic': profilePic,
         'message': message,
@@ -41,7 +44,7 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Post Lost or Found Item")),
+      appBar: AppBar(title: Text("Club Post")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -56,7 +59,7 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: postLostFoundItem,
+              onPressed: clubPost,
               child: Text("Submit Post"),
             ),
           ],
@@ -66,101 +69,80 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
   }
 }*/
 
-
-
-
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-
-class PostLostFoundScreen extends StatefulWidget {
-  const PostLostFoundScreen({Key? key}) : super(key: key);
+class CreateClubPostScreen extends StatefulWidget {
+  const CreateClubPostScreen({Key? key}) : super(key: key);
 
   @override
-  _PostLostFoundScreenState createState() =>
-      _PostLostFoundScreenState();
+  _CreateClubPostScreenState createState() =>
+      _CreateClubPostScreenState();
 }
 
-class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
+class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _messageController = TextEditingController();
   File? _media; // Can be either an image or a video
   String? _thumbnailPath; // Path to the generated thumbnail if video is selected
   final ImagePicker _picker = ImagePicker();
 
-  // Pick an image or video
-  Future<void> _pickMedia() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  /// Pick an image or video
+Future<void> _pickMedia() async {
+  final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      setState(() {
-        _media = File(pickedFile.path);
-        _thumbnailPath = null; // Reset thumbnail path in case we are picking an image
+  if (pickedFile != null) {
+    setState(() {
+      _media = File(pickedFile.path);
+      _thumbnailPath = null; // Reset thumbnail path in case we are picking an image
+    });
+  }
+}
+
+// Pick a video (without generating a thumbnail)
+Future<void> _pickVideo() async {
+  final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
+
+  if (pickedFile != null) {
+    setState(() {
+      _media = File(pickedFile.path);
+      _thumbnailPath = null; // No need for thumbnail generation
+    });
+  }
+}
+
+// Submit confession (image/video and message)
+Future<void> _submitConfession(BuildContext context) async {
+  if (_formKey.currentState!.validate()) {
+    final message = _messageController.text;
+    String? mediaPath;
+
+    if (_media != null) {
+      mediaPath = _media!.path;
+    }
+
+    try {
+      // Your Firestore upload logic here
+      // For example, upload to Firestore:
+      await FirebaseFirestore.instance.collection('clubPost').add({
+        'message': message,
+        'createdAt': FieldValue.serverTimestamp(),
+        'userName': FirebaseAuth.instance.currentUser?.displayName,
+        'profilePic': 'assets/profile_placeholder.png',
+        'mediaPath': mediaPath, // Store the media path
+        'status': 'pending',
       });
+
+      Navigator.pop(context);
+    } catch (e) {
+      print("Error submitting confession: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit confession. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
+}
 
-  // Pick a video and generate a thumbnail
-  Future<void> _pickVideo() async {
-    final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _media = File(pickedFile.path);
-        // _generateThumbnail(pickedFile.path); // Generate thumbnail for the video
-      });
-    }
-  }
-
-  // // Generate thumbnail for video
-  // Future<void> _generateThumbnail(String videoPath) async {
-  //   final String? thumbnail = await VideoThumbnail.thumbnailFile(
-  //     video: videoPath,
-  //     thumbnailPath: (await getTemporaryDirectory()).path,
-  //     imageFormat: ImageFormat.JPEG,
-  //     maxWidth: 200, // Width of the thumbnail
-  //     quality: 75, // Quality of the thumbnail
-  //   );
-
-  //   setState(() {
-  //     _thumbnailPath = thumbnail;
-  //   });
-  // }
-
-  // Submit confession (image/video and message)
-  Future<void> _submitConfession(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      final message = _messageController.text;
-      String? mediaPath;
-
-      if (_media != null) {
-        mediaPath = _media!.path;
-      }
-
-      try {
-        // Your Firestore upload logic here
-        // For example, upload to Firestore:
-        await FirebaseFirestore.instance.collection('lostFoundPosts').add({
-          'message': message,
-          'createdAt': FieldValue.serverTimestamp(),
-          'userName': FirebaseAuth.instance.currentUser?.displayName,
-          'profilePic': 'assets/profile_placeholder.png',
-          'mediaPath': mediaPath, // Store the media path
-          'status': 'pending',
-        });
-
-        Navigator.pop(context);
-      } catch (e) {
-        print("Error submitting confession: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit confession. Please try again later.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

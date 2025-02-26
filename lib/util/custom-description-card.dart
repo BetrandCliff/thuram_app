@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -286,9 +288,9 @@ Widget build(BuildContext context) {
                             ),
                           ),
                           child: ClipOval(
-                            child: userData["profileImage"] != null
-                                ? Image.network(
-                                    userData["profileImage"],
+                            child: userData["profilePic"] != null
+                                ? Image.file(
+                                    File(userData["profilePic"]),
                                     fit: BoxFit.cover,
                                   )
                                 : Image.asset(

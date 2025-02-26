@@ -64,7 +64,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text('Chat App')),
+      appBar: AppBar(title: Text('Chat With ChatGPT')),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -94,13 +94,13 @@ class _ChatScreenState extends State<ChatScreen> {
           Uri.parse(endpoint),
           headers: {
             'Content-Type': "application/json",
-            "Authorization": "Bearer \${dotenv.env['token']}",
+            "Authorization": "Bearer ${dotenv.env['token']}",
           },
           body: json.encode({
             "model": "gpt-4o",
             "messages": [
-              {"role": "system", "content": "You are a helpful assistant."},
-              {"role": "user", "content": controller.text}
+              
+              {"role": "developer", "content": controller.text}
             ],
             "max_tokens": 100,
             "temperature": 0.7,

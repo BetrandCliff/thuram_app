@@ -125,7 +125,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../../util/next-screen.dart';
 import '../../../../admin/presentations/model/course.dart';
+import 'post_course_content.dart';
 
 class CourseWidget extends StatefulWidget {
   final bool isStudent;
@@ -144,9 +146,7 @@ class _CourseWidgetState extends State<CourseWidget> {
     super.initState();
     courses = [];
     print("\n\nFetching courses");
-    widget.isStudent?fetchCoursesForStudent():
-    fetchCoursesByCurrentUser();
-
+    widget.isStudent ? fetchCoursesForStudent() : fetchCoursesByCurrentUser();
   }
 
   /*
@@ -233,76 +233,78 @@ Future<void> fetchCoursesByCurrentUser() async {
 }
 */
 
-Future<void> fetchCoursesForStudent() async {
-  String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-  if (currentUserEmail.isEmpty) {
-    print("No user is currently logged in");
-    return;
-  }
-
-  List<Course> fetchedCourses = [];
-  try {
-    // Fetch the student document based on the current user's email
-    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-        .collection('users') // Assuming a 'users' collection exists
-        .where('email', isEqualTo: currentUserEmail)
-        .get();
-
-    if (userSnapshot.docs.isNotEmpty) {
-      DocumentSnapshot userDoc = userSnapshot.docs.first;
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-      // Assuming the role is 'student' and we're dealing with a student
-      String userId = FirebaseAuth.instance.currentUser!.uid;
-
-      // Fetch all the courses the student is registered for
-      QuerySnapshot courseSnapshot = await FirebaseFirestore.instance
-          .collection('registrations')
-          .doc(userId)
-          .collection('courses')
-          .get();
-
-      if (courseSnapshot.docs.isNotEmpty) {
-        // Fetch course details for each registered course
-        var courseFutures = courseSnapshot.docs.map((doc) async {
-          String courseId = doc['courseId'];
-          // Fetch the course details from the 'courses' collection
-          DocumentSnapshot courseDoc = await FirebaseFirestore.instance
-              .collection('courses')
-              .doc(courseId)
-              .get();
-
-          if (courseDoc.exists) {
-            Map<String, dynamic> courseData = courseDoc.data() as Map<String, dynamic>;
-            return Course(
-              courseName: courseData['courseName'] ?? 'Unknown Course',
-              courseCode: courseData['courseCode'] ?? 'Unknown Code',
-              description: courseData['description'] ?? 'No description available',
-            );
-          }
-          return null; // If course document does not exist, return null
-        }).where((course) => course != null); // Filter out null courses
-
-        // Wait for all the course futures to complete and collect them in a list
-        fetchedCourses = (await Future.wait(courseFutures)).whereType<Course>().toList();
-      } else {
-        fetchedCourses = [];
-      }
-    } else {
-      print("User document not found for email: $currentUserEmail");
+  Future<void> fetchCoursesForStudent() async {
+    String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+    if (currentUserEmail.isEmpty) {
+      print("No user is currently logged in");
+      return;
     }
 
-    // Update the UI with the fetched courses
-    setState(() {
-      courses = fetchedCourses;
-    });
-  } catch (e) {
-    print("Error fetching courses for student: $e");
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
-  }
-}
+    List<Course> fetchedCourses = [];
+    try {
+      // Fetch the student document based on the current user's email
+      QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users') // Assuming a 'users' collection exists
+          .where('email', isEqualTo: currentUserEmail)
+          .get();
 
+      if (userSnapshot.docs.isNotEmpty) {
+        DocumentSnapshot userDoc = userSnapshot.docs.first;
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+        // Assuming the role is 'student' and we're dealing with a student
+        String userId = FirebaseAuth.instance.currentUser!.uid;
+
+        // Fetch all the courses the student is registered for
+        QuerySnapshot courseSnapshot = await FirebaseFirestore.instance
+            .collection('registrations')
+            .doc(userId)
+            .collection('courses')
+            .get();
+
+        if (courseSnapshot.docs.isNotEmpty) {
+          // Fetch course details for each registered course
+          var courseFutures = courseSnapshot.docs.map((doc) async {
+            String courseId = doc['courseId'];
+            // Fetch the course details from the 'courses' collection
+            DocumentSnapshot courseDoc = await FirebaseFirestore.instance
+                .collection('courses')
+                .doc(courseId)
+                .get();
+
+            if (courseDoc.exists) {
+              Map<String, dynamic> courseData =
+                  courseDoc.data() as Map<String, dynamic>;
+              return Course(
+                courseName: courseData['courseName'] ?? 'Unknown Course',
+                courseCode: courseData['courseCode'] ?? 'Unknown Code',
+                description:
+                    courseData['description'] ?? 'No description available',
+              );
+            }
+            return null; // If course document does not exist, return null
+          }).where((course) => course != null); // Filter out null courses
+
+          // Wait for all the course futures to complete and collect them in a list
+          fetchedCourses =
+              (await Future.wait(courseFutures)).whereType<Course>().toList();
+        } else {
+          fetchedCourses = [];
+        }
+      } else {
+        print("User document not found for email: $currentUserEmail");
+      }
+
+      // Update the UI with the fetched courses
+      setState(() {
+        courses = fetchedCourses;
+      });
+    } catch (e) {
+      print("Error fetching courses for student: $e");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
+    }
+  }
 
   Future<void> fetchCoursesByCurrentUser() async {
     print("FETCHING COURSES");
@@ -351,6 +353,7 @@ Future<void> fetchCoursesForStudent() async {
           print(courseSnapshot);
           fetchedCourses = courseSnapshot.docs.map((doc) {
             return Course(
+              id: doc.id,
               courseName: doc['courseName'],
               courseCode: doc['courseCode'],
               description: doc['description'],
@@ -375,6 +378,7 @@ Future<void> fetchCoursesForStudent() async {
           .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
     }
   }
+
 // */
   @override
   Widget build(BuildContext context) {
@@ -408,51 +412,56 @@ class CourseItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              course.courseName,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: () {
+        nextScreen(context, UploadCourseContent(courseId: course.id ?? ""));
+      },
+      child: Card(
+        margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 4,
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                course.courseName,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text('Course: ${course.courseName}'),
-            Text('Code: ${course.courseCode}'),
-            Text('Description: ${course.description}'),
-            SizedBox(height: 12),
-            if (isStudent)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle "View Details" button
-                      print('View Details of ${course.courseName}');
-                    },
-                    child: Text('View Details'),
-                  ),
-                  SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle "Unregister" button
-                      print('Unregister from ${course.courseName}');
-                    },
-                    child: Text('Unregister'),
-                  ),
-                ],
-              ),
-          ],
+              SizedBox(height: 8),
+              Text('Course: ${course.courseName}'),
+              Text('Code: ${course.courseCode}'),
+              Text('Description: ${course.description}'),
+              SizedBox(height: 12),
+              if (isStudent)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        // Handle "View Details" button
+                        print('View Details of ${course.courseName}');
+                      },
+                      child: Text('View Details'),
+                    ),
+                    SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Handle "Unregister" button
+                        print('Unregister from ${course.courseName}');
+                      },
+                      child: Text('Unregister'),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );

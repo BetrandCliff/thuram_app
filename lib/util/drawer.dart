@@ -29,7 +29,7 @@ class DrawerItems extends StatelessWidget {
                       width: 10,
                     ),
                     Text(
-                      "GUCONNECT",
+                      "RHIBMS_GUC",
                       style: Theme.of(context)
                           .textTheme
                           .displayMedium!

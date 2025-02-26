@@ -25,7 +25,7 @@ GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
 
 class _LecturerLandingPageState extends State<LecturerLandingPage> {
   final List<Widget> Pages = [
-    const HomePage(),
+    const HomePage(isStudent: false,),
     const Following(),
     // SearchStaffScreen(),
     //  staffId: FirebaseAuth.instance.currentUser!.uid??"",

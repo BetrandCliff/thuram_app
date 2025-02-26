@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                "GUConnects",
+                "RHIBMS_GUCs",
                 style: Theme.of(context)
                     .textTheme
                     .displayMedium!

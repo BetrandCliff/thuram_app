@@ -282,6 +282,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 // import 'package:image_picker/image_picker.dart';
 import 'package:thuram_app/util/custom-button.dart';
 import 'package:thuram_app/util/custom-input-form.dart';
@@ -303,7 +304,7 @@ class _AddStaffFormState extends State<AddStaffForm> {
 
   String? role;
   File? _image;
-  // final ImagePicker _picker = ImagePicker();
+  final ImagePicker _picker = ImagePicker();
 
   // Available roles
   final List<String> roles = ['Staff', 'Senior Staff'];
@@ -340,12 +341,12 @@ class _AddStaffFormState extends State<AddStaffForm> {
               title: Text('Camera'),
               onTap: () async {
                 Navigator.pop(context);
-                // final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-                // if (pickedFile != null) {
-                //   setState(() {
-                //     _image = File(pickedFile.path);
-                //   });
-                // }
+                final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+                if (pickedFile != null) {
+                  setState(() {
+                    _image = File(pickedFile.path);
+                  });
+                }
               },
             ),
             ListTile(
@@ -353,12 +354,12 @@ class _AddStaffFormState extends State<AddStaffForm> {
               title: Text('Gallery'),
               onTap: () async {
                 Navigator.pop(context);
-                // final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-                // if (pickedFile != null) {
-                //   setState(() {
-                //     _image = File(pickedFile.path);
-                //   });
-                // }
+                final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+                if (pickedFile != null) {
+                  setState(() {
+                    _image = File(pickedFile.path);
+                  });
+                }
               },
             ),
           ],

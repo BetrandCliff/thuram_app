@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:thuram_app/core/constants/asset-paths.dart';
 import 'package:thuram_app/core/constants/colors.dart';
+import 'package:thuram_app/feature/admin/presentations/pages/admin-courses.dart';
 import 'package:thuram_app/feature/admin/presentations/pages/approve-and-reject.dart';
 import 'package:thuram_app/feature/student/landing/presentation/pages/edit-profile.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/confersions.dart';
@@ -9,6 +10,8 @@ import 'package:thuram_app/feature/student/login/presentation/login.dart';
 import 'package:thuram_app/util/next-screen.dart';
 
 import '../../../../mainscreen.dart';
+import 'fetch_confession.dart';
+import 'fetch_staff.dart';
 
 class AdminDrawerItems extends StatelessWidget {
   const AdminDrawerItems({super.key});
@@ -33,7 +36,7 @@ class AdminDrawerItems extends StatelessWidget {
                       width: 10,
                     ),
                     Text(
-                      "GUCONNECT",
+                      "RHIBMS_GUC",
                       style: Theme.of(context)
                           .textTheme
                           .displayMedium!
@@ -49,14 +52,13 @@ class AdminDrawerItems extends StatelessWidget {
                 const Divider(),
                 GestureDetector(
                   onTap: () {
-                    nextScreen(context, Comment());
+                    nextScreen(context, AdminConfessionScreen());
                   },
                   child: ListTile(
                     leading: Icon(Icons.notifications),
                     title: Text("Confessions"),
                     trailing: Badge(
-                      label:
-                          Text("2", style: TextStyle(color: Colors.white)),
+                      label: Text("2", style: TextStyle(color: Colors.white)),
                       child: Icon(Icons.notifications),
                     ),
                   ),
@@ -75,20 +77,20 @@ class AdminDrawerItems extends StatelessWidget {
                 ),
                 GestureDetector(
                   onTap: () {
-                    nextScreen(context, EditProfile());
+                    nextScreen(context, AdminCourseWidget());
                   },
                   child: const ListTile(
-                    leading: Icon(Icons.share),
-                    title: Text("share"),
+                    leading: Icon(Icons.book),
+                    title: Text("courses"),
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    nextScreen(context, EditProfile());
+                    nextScreen(context, StaffListScreen());
                   },
                   child: const ListTile(
-                    leading: Icon(Icons.policy),
-                    title: Text("Policies"),
+                    leading: Icon(Icons.person),
+                    title: Text("Staffs"),
                   ),
                 )
               ],

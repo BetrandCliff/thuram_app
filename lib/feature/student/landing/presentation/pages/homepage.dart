@@ -145,7 +145,7 @@ class HomePage extends StatelessWidget {
 
 
         SizedBox(
-          height: 220,
+          height: 120,
           width: double.infinity,
           child: Card(
             color: Colors.white,
@@ -184,8 +184,8 @@ class HomePage extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            width: 120, // Adjust size
-                            height: 120,
+                            width: 90, 
+                            height: 90,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               boxShadow: [
@@ -240,7 +240,7 @@ class HomePage extends StatelessWidget {
                                       .displaySmall!
                                       .copyWith(fontSize: 14),
                                 ),
-                                Container(
+                                /*Container(
                                   margin: const EdgeInsets.only(top: 10),
                                   height: 70,
                                   width: 70,
@@ -271,20 +271,20 @@ class HomePage extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                )
+                                )*/
                               ],
                             ),
                           )
                         ],
                       ),
-                      Container(
-                        margin: EdgeInsets.only(top: 10),
-                        height: 30,
-                        child: Text(
-                          userStatus, // Display the user's status
-                          style: Theme.of(context).textTheme.displayMedium,
-                        ),
-                      ),
+                      // Container(
+                      //   margin: EdgeInsets.only(top: 10),
+                      //   height: 30,
+                      //   child: Text(
+                      //     userStatus, // Display the user's status
+                      //     style: Theme.of(context).textTheme.displayMedium,
+                      //   ),
+                      // ),
                     ],
                   );
                 },

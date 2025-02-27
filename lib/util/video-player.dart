@@ -1,46 +1,42 @@
-// import 'package:flutter/material.dart';
-// import 'package:video_player/video_player.dart';
+import 'dart:io';
 
-// class VideoPlayerWidget extends StatefulWidget {
-//   final String videoUrl;
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
-//   const VideoPlayerWidget({super.key, required this.videoUrl});
+class VideoPlayerWidget extends StatefulWidget {
+  final String mediaPath;
 
-//   @override
-//   _VideoPlayerWidgetState createState() => _VideoPlayerWidgetState();
-// }
+  const VideoPlayerWidget({super.key, required this.mediaPath});
 
-// class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
-//   late VideoPlayerController _controller;
+  @override
+  _VideoPlayerWidgetState createState() => _VideoPlayerWidgetState();
+}
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _controller = VideoPlayerController.network(widget.videoUrl)
-//       ..initialize().then((_) {
-//         // Ensure the first frame is shown after the video is initialized
-//         setState(() {});
-//       });
-//   }
+class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
+  late VideoPlayerController _controller;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return _controller.value.isInitialized
-//         ? AspectRatio(
-//             aspectRatio: _controller.value.aspectRatio,
-//             child: Card(child: Text("") 
-//             // VideoPlayer(_controller)
-//             ),
-//           )
-//         : Container(
-//             height: 200,
-//             child: Center(child: CircularProgressIndicator()),
-//           );
-//   }
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.file(File(widget.mediaPath))
+      ..initialize().then((_) {
+        setState(() {}); // Ensure the first frame is shown before playing
+      });
+  }
 
-//   @override
-//   void dispose() {
-//     super.dispose();
-//     _controller.dispose();
-//   }
-// }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _controller.value.isInitialized
+        ? AspectRatio(
+      aspectRatio: _controller.value.aspectRatio,
+      child: VideoPlayer(_controller),
+    )
+        : const Center(child: CircularProgressIndicator());
+  }
+}

@@ -9,18 +9,11 @@ import 'package:thuram_app/util/next-screen.dart';
 import 'package:thuram_app/util/widthandheight.dart';
 import '../../../../../core/constants/asset-paths.dart';
 import '../../../../../core/constants/colors.dart';
-import '../pages/profile.dart'; // Your ProfilePage (if needed)
-
-import 'package:video_player/video_player.dart'; // Import for video support
-
-import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import '../../../../admin/presentations/database/db.dart';
 
 
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+
+
 
 class CreateConfessionScreen extends StatefulWidget {
   const CreateConfessionScreen({Key? key}) : super(key: key);
@@ -34,77 +27,70 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _messageController = TextEditingController();
   File? _media; // Can be either an image or a video
-  String? _thumbnailPath; // Path to the generated thumbnail if video is selected
+  String? _thumbnailPath;
   final ImagePicker _picker = ImagePicker();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // Pick an image or video
+  /// Pick an image
   Future<void> _pickMedia() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       setState(() {
         _media = File(pickedFile.path);
-        _thumbnailPath = null; // Reset thumbnail path in case we are picking an image
+        _thumbnailPath = null;
       });
     }
   }
 
-  // Pick a video and generate a thumbnail
+  /// Pick a video
   Future<void> _pickVideo() async {
     final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       setState(() {
         _media = File(pickedFile.path);
-        // _generateThumbnail(pickedFile.path); // Generate thumbnail for the video
+        _thumbnailPath = null;
       });
     }
   }
 
-  // Generate thumbnail for video
-  // Future<void> _generateThumbnail(String videoPath) async {
-  //   final String? thumbnail = await VideoThumbnail.thumbnailFile(
-  //     video: videoPath,
-  //     thumbnailPath: (await getTemporaryDirectory()).path,
-  //     imageFormat: ImageFormat.JPEG,
-  //     maxWidth: 200, // Width of the thumbnail
-  //     quality: 75, // Quality of the thumbnail
-  //   );
-
-  //   setState(() {
-  //     _thumbnailPath = thumbnail;
-  //   });
-  // }
-
-  // Submit confession (image/video and message)
+  /// Submit confession
   Future<void> _submitConfession(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       final message = _messageController.text;
-      String? mediaPath;
-
       if (_media != null) {
-        mediaPath = _media!.path;
-      }
+        final mediaPath = _media!.path;
+        final mediaType = mediaPath.endsWith('.mp4') ? 'video' : 'image';
 
-      try {
-        // Your Firestore upload logic here
-        // For example, upload to Firestore:
-        await FirebaseFirestore.instance.collection('confessions').add({
-          'message': message,
-          'createdAt': FieldValue.serverTimestamp(),
-          'userName': "Anonymous",
-          'profilePic': 'assets/profile_placeholder.png',
-          'mediaPath': mediaPath, // Store the media path
-          'status': 'pending',
-        });
+        try {
+          // Store media path in SQLite and get the inserted ID
+          int mediaId = await _dbHelper.insertMedia('confessions', mediaPath, mediaType);
 
-        Navigator.pop(context);
-      } catch (e) {
-        print("Error submitting confession: $e");
+          // Upload confession details to Firestore, including SQLite media ID
+          await FirebaseFirestore.instance.collection('confessions').add({
+            'message': message,
+            'createdAt': FieldValue.serverTimestamp(),
+            'userName': FirebaseAuth.instance.currentUser?.displayName ?? "Anonymous",
+            'profilePic': 'assets/profile_placeholder.png',
+            'mediaId': mediaId, // Store SQLite media ID
+            'status': 'pending',
+            'userId': FirebaseAuth.instance.currentUser?.uid,
+          });
+
+          Navigator.pop(context);
+        } catch (e) {
+          print("Error submitting confession: $e");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to submit confession. Please try again later.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit confession. Please try again later.'),
-            backgroundColor: Colors.red,
+            content: Text('Please select an image or video'),
+            backgroundColor: Colors.orange,
           ),
         );
       }
@@ -114,9 +100,7 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Create Confession'),
-      ),
+      appBar: AppBar(title: Text('Create Confession')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -124,10 +108,7 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Enter your confession:',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
+              Text('Enter your confession:', style: Theme.of(context).textTheme.displayMedium),
               SizedBox(height: 10),
               TextFormField(
                 controller: _messageController,
@@ -155,14 +136,14 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            _pickMedia(); // Pick image
+                            _pickMedia();
                             Navigator.pop(context);
                           },
                           child: Text('Pick Image'),
                         ),
                         TextButton(
                           onPressed: () {
-                            _pickVideo(); // Pick video
+                            _pickVideo();
                             Navigator.pop(context);
                           },
                           child: Text('Pick Video'),
@@ -177,21 +158,9 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
                   color: Colors.grey[200],
                   child: _media == null
                       ? Center(child: Text('Tap to select media'))
-                      : _thumbnailPath != null
-                          ? Image.file(
-                              File(_thumbnailPath!),
-                              fit: BoxFit.cover,
-                            )
-                          : _media!.path.endsWith('.mp4')
-                              ? Icon(
-                                  Icons.video_camera_front,
-                                  size: 50,
-                                  color: Colors.grey,
-                                )
-                              : Image.file(
-                                  _media!,
-                                  fit: BoxFit.cover,
-                                ),
+                      : _media!.path.endsWith('.mp4')
+                          ? Icon(Icons.video_camera_front, size: 50, color: Colors.grey)
+                          : Image.file(_media!, fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(height: 16),

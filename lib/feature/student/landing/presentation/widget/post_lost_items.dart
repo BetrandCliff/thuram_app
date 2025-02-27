@@ -142,6 +142,7 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
         // For example, upload to Firestore:
         await FirebaseFirestore.instance.collection('lostFoundPosts').add({
           'message': message,
+          'userId': FirebaseAuth.instance.currentUser?.uid,
           'createdAt': FieldValue.serverTimestamp(),
           'userName': FirebaseAuth.instance.currentUser?.displayName,
           'profilePic': 'assets/profile_placeholder.png',
@@ -166,7 +167,7 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Confession'),
+        title: Text('Post Missing Item'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

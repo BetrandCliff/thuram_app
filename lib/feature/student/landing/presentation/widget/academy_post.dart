@@ -113,6 +113,7 @@ class _AcademyPostScreenState extends State<AcademyPostScreen> {
         'message': _messageController.text,
         'likes': [],
         'comments': [],
+        'userId':user.uid,
         'createdAt': FieldValue.serverTimestamp(),
         'mediaPath': mediaPath, // Store media path or URL
         'thumbnailPath': _thumbnailPath, // Store the thumbnail path if it's a video
@@ -151,52 +152,57 @@ class _AcademyPostScreenState extends State<AcademyPostScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Media picker buttons (for image/video)
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: _pickMedia,
-                  child: Text('Pick Image'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _pickVideo,
-                  child: Text('Pick Video'),
-                ),
-              ],
-            ),
-            if (_media != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: _thumbnailPath != null
-                    ? Image.file(File(_thumbnailPath!)) // Display video thumbnail
-                    : _videoPlayerController != null
-                        ? AspectRatio(
-                            aspectRatio: _videoPlayerController!.value.aspectRatio,
-                            child: VideoPlayer(_videoPlayerController!),
-                          ) // Display video player
-                        : Image.file(_media!), // Display image
-              ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _messageController,
-              maxLines: 5,
-              decoration: InputDecoration(
-                hintStyle: Theme.of(context).textTheme.displaySmall,
-                hintText: 'What’s on your mind?',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _createPost,
-                    child: Text('Post'),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Media picker buttons (for image/video)
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: _pickMedia,
+                    child: Text('Pick Image'),
                   ),
-          ],
+                  SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _pickVideo,
+                    child: Text('Pick Video'),
+                  ),
+                ],
+              ),
+              if (_media != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child:SizedBox(
+                    height: 200,
+                    child:  _thumbnailPath != null
+                        ? Image.file(File(_thumbnailPath!)) // Display video thumbnail
+                        : _videoPlayerController != null
+                        ? AspectRatio(
+                      aspectRatio: _videoPlayerController!.value.aspectRatio,
+                      child: VideoPlayer(_videoPlayerController!),
+                    ) // Display video player
+                        : Image.file(_media!),
+                  ) // Display image
+                ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _messageController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintStyle: Theme.of(context).textTheme.displaySmall,
+                  hintText: 'What’s on your mind?',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 20),
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _createPost,
+                      child: Text('Post'),
+                    ),
+            ],
+          ),
         ),
       ),
     );

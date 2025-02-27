@@ -169,19 +169,33 @@
 
 
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:thuram_app/util/widthandheight.dart';
+import 'package:thuram_app/feature/student/landing/presentation/widget/confersions.dart';
 import '../../../../../core/constants/asset-paths.dart';
 import '../../../../../util/next-screen.dart';
+import '../../../../../util/video-player.dart';
 import '../pages/profile.dart';
 import 'post_lost_items.dart';  // Import the Create Post screen
+
+import 'package:sqflite/sqflite.dart';
 
 class MissingItems extends StatelessWidget {
   const MissingItems({super.key});
 
+  // Function to delete post from SQLite
+  Future<void> deletePostFromSQLite(String postId) async {
+    final Database db = await openDatabase('academy.db');
+    await db.delete('lostFoundPosts', where: 'id = ?', whereArgs: [postId]);
+  }
+
   @override
   Widget build(BuildContext context) {
+    String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
     return Column(
       children: [
         Align(
@@ -201,11 +215,10 @@ class MissingItems extends StatelessWidget {
                       .copyWith(color: Colors.blue),
                 ),
               ),
-              SizedBox(width: 20), // Add some space between the texts
+              SizedBox(width: 20),
               GestureDetector(
                 onTap: () {
-                  // Navigate to the screen where users can create a post
-                  nextScreen(context, PostLostFoundScreen());  // Make sure CreatePostScreen is implemented
+                  nextScreen(context, PostLostFoundScreen());
                 },
                 child: Text(
                   "Create Post",
@@ -218,30 +231,57 @@ class MissingItems extends StatelessWidget {
             ],
           ),
         ),
-        Expanded( // This ensures the ListView doesn't cause overflow
+        Expanded(
           child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('lostFoundPosts').orderBy('createdAt', descending: true).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
+            stream: FirebaseFirestore.instance
+                .collection('lostFoundPosts')
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-                if (snapshot.hasError) {
-                  return Center(child: Text('Something went wrong!'));
-                }
+              if (snapshot.hasError) {
+                return Center(child: Text('Something went wrong!'));
+              }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No posts available.'));
-                }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(child: Text('No posts available.'));
+              }
 
-                var posts = snapshot.data!.docs;
+              var posts = snapshot.data!.docs;
 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: posts.length,
-                  itemBuilder: (context, index) {
-                    var post = posts[index];
-                    return GestureDetector(
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: posts.length,
+                itemBuilder: (context, index) {
+                  var post = posts[index];
+                  String? mediaPath = post['mediaPath'];
+                  String? postOwnerId = post['userId'];
+
+                  return Dismissible(
+                    key: Key(post.id),
+                    direction: currentUserId == postOwnerId
+                        ? DismissDirection.endToStart
+                        : DismissDirection.none,
+                    onDismissed: (direction) async {
+                      // Delete from Firestore
+                      await FirebaseFirestore.instance
+                          .collection('lostFoundPosts')
+                          .doc(post.id)
+                          .delete();
+
+                      // Delete from SQLite
+                      await deletePostFromSQLite(post.id);
+                    },
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: EdgeInsets.only(right: 16),
+                      child: Icon(Icons.delete, color: Colors.white),
+                    ),
+                    child: GestureDetector(
                       onTap: () {
                         nextScreen(context, ProfilePage());
                       },
@@ -258,42 +298,200 @@ class MissingItems extends StatelessWidget {
                                   contentPadding: EdgeInsets.all(0),
                                   leading: CircleAvatar(
                                     radius: 20,
-                                    backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
+                                    backgroundImage: NetworkImage(
+                                        post['profilePic'] ??
+                                            AppImages.profile),
                                   ),
-                                  title: Text(post['userName']),
-                                  subtitle: Text(post['createdAt'].toDate().toString()),
+                                  title: Text(post['userName'] ?? "Anonymous"),
+                                  subtitle: Text(
+                                      post['createdAt'].toDate().toString()),
                                 ),
                                 Text(
                                   post['message'],
-                                  style: Theme.of(context).textTheme.displayMedium,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displayMedium,
                                 ),
                                 const SizedBox(height: 20),
+                                if (mediaPath != null && mediaPath.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    child: mediaPath.endsWith('.mp4') ||
+                                        mediaPath.endsWith('.mov')
+                                        ? Container(
+                                      width: double.infinity,
+                                      height: 200,
+                                      child: VideoPlayerWidget(
+                                          mediaPath: mediaPath),
+                                    )
+                                        : ClipRRect(
+                                      borderRadius:
+                                      BorderRadius.circular(8.0),
+                                      child: Image.file(
+                                        File(mediaPath),
+                                        width: double.infinity,
+                                        height: 200,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return const Center(
+                                            child: Text(
+                                                "Image failed to load"),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            )
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ],
     );
   }
 }
 
-class LostItem {
-  final String description;
-  final String user;
-  final DateTime postedTime;
-  final String? imageUrl;
-
-  LostItem({
-    required this.description,
-    required this.user,
-    required this.postedTime,
-    this.imageUrl,
-  });
-}
+//
+// class MissingItems extends StatelessWidget {
+//   const MissingItems({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       children: [
+//         Align(
+//           alignment: Alignment.topRight,
+//           child: Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               GestureDetector(
+//                 onTap: () {
+//                   nextScreen(context, ProfilePage());
+//                 },
+//                 child: Text(
+//                   "All view",
+//                   style: Theme.of(context)
+//                       .textTheme
+//                       .displayMedium!
+//                       .copyWith(color: Colors.blue),
+//                 ),
+//               ),
+//               SizedBox(width: 20), // Add some space between the texts
+//               GestureDetector(
+//                 onTap: () {
+//                   // Navigate to the screen where users can create a post
+//                   nextScreen(context, PostLostFoundScreen());  // Make sure CreatePostScreen is implemented
+//                 },
+//                 child: Text(
+//                   "Create Post",
+//                   style: Theme.of(context)
+//                       .textTheme
+//                       .displayMedium!
+//                       .copyWith(color: Colors.blue),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//         Expanded(
+//           child: StreamBuilder<QuerySnapshot>(
+//               stream: FirebaseFirestore.instance.collection('lostFoundPosts').orderBy('createdAt', descending: true).snapshots(),
+//               builder: (context, snapshot) {
+//                 if (snapshot.connectionState == ConnectionState.waiting) {
+//                   return Center(child: CircularProgressIndicator());
+//                 }
+//
+//                 if (snapshot.hasError) {
+//                   return Center(child: Text('Something went wrong!'));
+//                 }
+//
+//                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+//                   return Center(child: Text('No posts available.'));
+//                 }
+//
+//                 var posts = snapshot.data!.docs;
+//
+//                 return ListView.builder(
+//                   shrinkWrap: true,
+//                   itemCount: posts.length,
+//                   itemBuilder: (context, index) {
+//                     var post = posts[index];
+//                      String? mediaPath = post['mediaPath'];
+//                     return GestureDetector(
+//                       onTap: () {
+//                         nextScreen(context, ProfilePage());
+//                       },
+//                       child: Container(
+//                         margin: const EdgeInsets.symmetric(vertical: 10),
+//                         child: Card(
+//                           elevation: 3,
+//                           child: Padding(
+//                             padding: const EdgeInsets.all(8.0),
+//                             child: Column(
+//                               crossAxisAlignment: CrossAxisAlignment.start,
+//                               children: [
+//                                 ListTile(
+//                                   contentPadding: EdgeInsets.all(0),
+//                                   leading: CircleAvatar(
+//                                     radius: 20,
+//                                     backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
+//                                   ),
+//                                   title: Text(post['userName']??"Anonymous"),
+//                                   subtitle: Text(post['createdAt'].toDate().toString()),
+//                                 ),
+//                                 Text(
+//                                   post['message'],
+//                                   style: Theme.of(context).textTheme.displayMedium,
+//                                 ),
+//                                 const SizedBox(height: 20),
+//
+//                                 if (mediaPath != null && mediaPath.isNotEmpty)
+//                                   Padding(
+//                                     padding: const EdgeInsets.symmetric(vertical: 10),
+//                                     child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
+//                                         ?
+//                                           Container(
+//                                             width: double.infinity,
+//                                             height: 200,
+//                                             child: VideoPlayerWidget(mediaPath: mediaPath),
+//                                           )
+//                                         :
+//                                           ClipRRect(
+//                                             borderRadius: BorderRadius.circular(8.0),
+//                                             child: Image.file(
+//                                               File(mediaPath),
+//                                               width: double.infinity,
+//                                               height: 200,
+//                                               fit: BoxFit.cover,
+//                                               errorBuilder: (context, error, stackTrace) {
+//                                                 return const Center(
+//                                                   child: Text("Image failed to load"),
+//                                                 );
+//                                               },
+//                                             ),
+//                                           ),
+//                                   ),
+//                               ],
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     );
+//                   },
+//                 );
+//               },
+//             )
+//         ),
+//       ],
+//     );
+//   }
+// }

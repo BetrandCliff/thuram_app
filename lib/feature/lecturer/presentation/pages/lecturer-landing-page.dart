@@ -10,6 +10,7 @@ import 'package:thuram_app/util/next-screen.dart';
 import '../../../../../core/constants/values.dart';
 import '../../../../../util/custom-description-card.dart';
 import '../../../chat/chat-gpt.dart';
+import '../../../chat/gemini_chat.dart';
 import '../../../student/landing/presentation/pages/courses.dart';
 import '../../../student/landing/presentation/pages/following.dart';
 import '../../../student/landing/presentation/pages/search-staff.dart';
@@ -145,7 +146,7 @@ class _LecturerLandingPageState extends State<LecturerLandingPage> {
         floatingActionButton: ClipOval(
             child: FloatingActionButton(
           onPressed: () {
-            nextScreen(context, ChatScreen());
+            nextScreen(context, GeminiChat());
           },
           child: Icon(Icons.chat),
         )),

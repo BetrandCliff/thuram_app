@@ -128,6 +128,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../../util/next-screen.dart';
 import '../../../../admin/presentations/model/course.dart';
 import 'post_course_content.dart';
+import 'view_coursedetails.dart';
 
 class CourseWidget extends StatefulWidget {
   final bool isStudent;
@@ -148,90 +149,6 @@ class _CourseWidgetState extends State<CourseWidget> {
     print("\n\nFetching courses");
     widget.isStudent ? fetchCoursesForStudent() : fetchCoursesByCurrentUser();
   }
-
-  /*
-Future<void> fetchCoursesByCurrentUser() async {
-  print("FETCHING COURSES");
-  String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-  print("CURRENT USER EMAIL IS $currentUserEmail");
-  if (currentUserEmail.isEmpty) {
-    print("No user is currently logged in");
-    return;
-  }
-
-  List<Course> fetchedCourses = [];
-  print("Fetching courses for current user with email: $currentUserEmail");
-
-  try {
-    // Fetch the student document based on the current user's email
-    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-        .collection('users') // Assuming a 'users' collection exists
-        .where('email', isEqualTo: currentUserEmail)
-        .get();
-
-    if (userSnapshot.docs.isNotEmpty) {
-      DocumentSnapshot userDoc = userSnapshot.docs.first;
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-      // Assuming you have a 'role' field to distinguish between staff and student
-      String role = userData['role'] ?? 'student'; // Default to student if role is missing
-      print("USER ROLE IS $role");
-
-      if (role == 'student') {
-        // Fetch registered courses for student
-        String userId = FirebaseAuth.instance.currentUser!.uid;
-        // Fetch all the courses the student is registered for from the 'registrations/{userId}/courses' collection
-        QuerySnapshot courseSnapshot = await FirebaseFirestore.instance
-            .collection('registrations')
-            .doc(userId)
-            .collection('courses')
-            .get();
-
-        if (courseSnapshot.docs.isNotEmpty) {
-          // Fetch courses details for each registered course
-          var courseFutures = courseSnapshot.docs.map((doc) async {
-            String courseId = doc['courseId'];
-            // Fetch the course details from the 'courses' collection
-            DocumentSnapshot courseDoc = await FirebaseFirestore.instance
-                .collection('courses')
-                .doc(courseId)
-                .get();
-
-            if (courseDoc.exists) {
-              Map<String, dynamic> courseData = courseDoc.data() as Map<String, dynamic>;
-              return Course(
-                courseName: courseData['courseName'] ?? 'Unknown Course',
-                courseCode: courseData['courseCode'] ?? 'Unknown Code',
-                description: courseData['description'] ?? 'No description available',
-              );
-            }
-            return null; // If course document does not exist, return null
-          }).where((course) => course != null); // Filter out null courses
-
-          // Wait for all the course futures to complete and collect them in a list
-          fetchedCourses = (await Future.wait(courseFutures)).whereType<Course>().toList();
-        } else {
-          fetchedCourses = [];
-        }
-      } else {
-        print("User role is not student, skipping course fetch");
-        fetchedCourses = [];
-      }
-    } else {
-      print("User document not found for email: $currentUserEmail");
-    }
-
-    // Update the UI with the fetched courses
-    setState(() {
-      courses = fetchedCourses;
-    });
-  } catch (e) {
-    print("Error fetching courses: $e");
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Failed to fetch courses')));
-  }
-}
-*/
 
   Future<void> fetchCoursesForStudent() async {
     String currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
@@ -273,9 +190,12 @@ Future<void> fetchCoursesByCurrentUser() async {
                 .get();
 
             if (courseDoc.exists) {
+              print("COURSE EXIST  $courseId");
+
               Map<String, dynamic> courseData =
                   courseDoc.data() as Map<String, dynamic>;
               return Course(
+                id: courseId,
                 courseName: courseData['courseName'] ?? 'Unknown Course',
                 courseCode: courseData['courseCode'] ?? 'Unknown Code',
                 description:
@@ -352,6 +272,7 @@ Future<void> fetchCoursesByCurrentUser() async {
           print("COURSE FROM COURSE DOCUMENT");
           print(courseSnapshot);
           fetchedCourses = courseSnapshot.docs.map((doc) {
+            print('THE COURSE ID IS ${doc.id} FROM DOCS');
             return Course(
               id: doc.id,
               courseName: doc['courseName'],
@@ -414,7 +335,15 @@ class CourseItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        nextScreen(context, UploadCourseContent(courseId: course.id ?? ""));
+        isStudent
+            ? nextScreen(
+                context,
+                CourseContentDisplay(
+                  courseId: course.id ?? "",
+                   course: course,
+                ))
+            : nextScreen(
+                context, UploadCourseContent(courseId: course.id ?? ""));
       },
       child: Card(
         margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
@@ -447,6 +376,13 @@ class CourseItem extends StatelessWidget {
                       onPressed: () {
                         // Handle "View Details" button
                         print('View Details of ${course.courseName}');
+                        nextScreen(
+                            context,
+                            CourseContentDisplay(
+                              courseId: course.id ?? "",
+                              course: course,
+                              
+                            ));
                       },
                       child: Text('View Details'),
                     ),

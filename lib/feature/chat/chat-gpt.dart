@@ -48,6 +48,8 @@ class _ChatScreenState extends State<ChatScreen> {
   String responseText = '';
   bool isRequestInProgress = false;
 
+  
+
   @override
   void initState() {
     super.initState();

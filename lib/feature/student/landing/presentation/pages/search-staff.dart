@@ -12,13 +12,13 @@ class SearchStaffScreen extends StatefulWidget {
   _SearchStaffScreenState createState() => _SearchStaffScreenState();
 }
 
-
 class _SearchStaffScreenState extends State<SearchStaffScreen> {
   String searchQuery = "";
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Set<String> followingIds = {}; // Store IDs of users the current user is following
+  Set<String> followingIds =
+      {}; // Store IDs of users the current user is following
 
   @override
   void initState() {
@@ -105,7 +105,11 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
         }
 
         var items = snapshot.data!.docs
-            .map((doc) => doc.data() as Map<String, dynamic>)
+            .map((doc) {
+              var data = doc.data() as Map<String, dynamic>;
+              data['id'] = doc.id; // Include document ID
+              return data;
+            })
             .where((item) =>
                 item['username'] != null &&
                 item['username'].toLowerCase().contains(searchQuery))
@@ -116,42 +120,43 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
           itemBuilder: (context, index) {
             var item = items[index];
             bool isFollowing = followingIds.contains(item['id']);
-
-            return Card(
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundImage:
-                      item['image'] != null && item['image'].isNotEmpty
-                          ? NetworkImage(item['image'])
-                          : null,
-                  child: item['image'] == null || item['image'].isEmpty
-                      ? Icon(Icons.person)
-                      : null,
-                ),
-                title: Text(item['username'] ?? 'No Name'),
-                subtitle: Text(item['email'] ?? 'No Email'),
-                trailing: collectionName == 'users'
-                    ? ElevatedButton(
-                        onPressed: () {
-                          isFollowing
-                              ? _unfollowUser(item['id'])
-                              : _followUser(item['id']);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isFollowing
-                              ? Colors.blueGrey
-                              : Colors.orange,
-                        ),
-                        child: Text(
-                          isFollowing ? 'Following' : 'Follow',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+            return GestureDetector(
+              onTap: ()=>collectionName == 'staff'?nextScreen(context,ProfilePage()):null,
+              child: Card(
+                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage:
+                        item['image'] != null && item['image'].isNotEmpty
+                            ? NetworkImage(item['image'])
+                            :NetworkImage("https://randomuser.me/api/portraits/men/$index.jpg") ,
+                    // child: item['image'] == null || item['image'].isEmpty
+                    //     ? null
+                    //     : null,
+                  ),
+                  title: Text(item['username'] ?? 'No Name'),
+                  subtitle: Text(item['email'] ?? 'No Email'),
+                  trailing: collectionName == 'users'
+                      ? ElevatedButton(
+                          onPressed: () {
+                            isFollowing
+                                ? _unfollowUser(item['id'])
+                                : _followUser(item['id']);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isFollowing ? Colors.blueGrey : Colors.orange,
                           ),
-                        ),
-                      )
-                    : Icon(Icons.arrow_forward_ios),
+                          child: Text(
+                            isFollowing ? 'Following' : 'Follow',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : Icon(Icons.arrow_forward_ios),
+                ),
               ),
             );
           },
@@ -161,6 +166,7 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
   }
 
   Future<void> _followUser(String userIdToFollow) async {
+    print("THE FOLLOWER ID $userIdToFollow");
     User? user = _auth.currentUser;
     if (user == null) return;
 
@@ -173,10 +179,9 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
           'following': FieldValue.arrayUnion([userIdToFollow])
         });
 
-        await _firestore
-            .collection('users')
-            .doc(userIdToFollow)
-            .update({'followers': FieldValue.arrayUnion([user.uid])});
+        await _firestore.collection('users').doc(userIdToFollow).update({
+          'followers': FieldValue.arrayUnion([user.uid])
+        });
 
         setState(() {
           followingIds.add(userIdToFollow);
@@ -200,10 +205,9 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
           'following': FieldValue.arrayRemove([userIdToUnfollow])
         });
 
-        await _firestore
-            .collection('users')
-            .doc(userIdToUnfollow)
-            .update({'followers': FieldValue.arrayRemove([user.uid])});
+        await _firestore.collection('users').doc(userIdToUnfollow).update({
+          'followers': FieldValue.arrayRemove([user.uid])
+        });
 
         setState(() {
           followingIds.remove(userIdToUnfollow);

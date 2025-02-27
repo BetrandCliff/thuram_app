@@ -81,7 +81,8 @@ Future<void> _pickImage() async {
       'courseCode': courseCode,
       'courseName': courseName,
       'description': description,
-      'imageUrl': imageUrl, // Store the URL of the image (if available)
+      'imageUrl': imageUrl, /// Store the URL of the image (if available)
+      "content": []
     };
 
     // Get the Firestore instance

@@ -43,15 +43,15 @@ class DrawerItems extends StatelessWidget {
                   height: 40,
                 ),
                 const Divider(),
-                GestureDetector(
-                  onTap: () {
-                    nextScreen(context, LostAndFound());
-                  },
-                  child: const ListTile(
-                    leading: Icon(Icons.visibility),
-                    title: Text("LOST & FOUND"),
-                  ),
-                ),
+                // GestureDetector(
+                //   onTap: () {
+                //     nextScreen(context, LostAndFound());
+                //   },
+                //   child: const ListTile(
+                //     leading: Icon(Icons.visibility),
+                //     title: Text("LOST & FOUND"),
+                //   ),
+                // ),
                 GestureDetector(
                   onTap: () {},
                   child: const ListTile(

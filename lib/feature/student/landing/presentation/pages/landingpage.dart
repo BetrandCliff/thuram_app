@@ -5,9 +5,11 @@ import 'package:thuram_app/core/constants/colors.dart';
 import 'package:thuram_app/feature/student/landing/presentation/pages/homepage.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/lost_and_found.dart';
 import 'package:thuram_app/util/drawer.dart';
+import 'package:thuram_app/util/next-screen.dart';
 
 import '../../../../../core/constants/values.dart';
 import '../../../../../util/custom-description-card.dart';
+import '../../../../chat/gemini_chat.dart';
 import '../../../login/presentation/login.dart';
 import '../../../login/presentation/signup.dart';
 import '../widget/academy.dart';
@@ -31,10 +33,9 @@ class _LandingPageState extends State<LandingPage> {
     Following(),
     SearchStaffScreen(),
     // staffId: FirebaseAuth.instance.currentUser!.uid??"5Mxd5oittENenIKHinmhvskxDaG3",
-    CourseWidget( ),
-    
+    CourseWidget(),
+
     CustomDescriptionCard(),
-    
   ];
 
   @override
@@ -135,7 +136,13 @@ class _LandingPageState extends State<LandingPage> {
             ),
           ),
         ),
-        floatingActionButton: ClipOval(child: FloatingActionButton(onPressed: (){},child: Icon(Icons.chat),)),
+        floatingActionButton: ClipOval(
+            child: FloatingActionButton(
+          onPressed: () {
+            nextScreen(context, GeminiChat());
+          },
+          child: Icon(Icons.chat),
+        )),
       ),
     );
   }

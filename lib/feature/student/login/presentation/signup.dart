@@ -116,7 +116,7 @@ Future<void> _signup() async {
       // Create a UserModel instance
       UserModel userModel = UserModel(
         email: _emailController.text.trim(),
-        username: _usernameController.text.trim(),
+        username: user.displayName?? _usernameController.text.trim(),
         userId: userId,
         role: _emailController.text.trim().contains("admin")
             ? "admin"

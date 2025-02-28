@@ -452,24 +452,25 @@ class _UploadCourseContentState extends State<UploadCourseContent> {
               const SizedBox(height: 16),
 
               // Buttons for picking media
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: _pickImage,
-                    child: const Text('Pick Image'),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _pickVideo,
-                    child: const Text('Pick Video'),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _pickPDF,
-                    child: const Text('Pick PDF'),
-                  ),
-                ],
-              ),
+               Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _pickImage,
+                      child: const Text('Pick Image'),
+                    ),
+                    const SizedBox(width: 5),
+                    ElevatedButton(
+                      onPressed: _pickVideo,
+                      child: const Text('Pick Video'),
+                    ),
+                    const SizedBox(width: 5),
+                    ElevatedButton(
+                      onPressed: _pickPDF,
+                      child: const Text('Pick PDF'),
+                    ),
+                  ],
+                ),
+
 
               const SizedBox(height: 20),
 

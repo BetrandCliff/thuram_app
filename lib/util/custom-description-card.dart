@@ -292,6 +292,12 @@ Widget build(BuildContext context) {
                                 ? Image.file(
                                     File(userData["profilePic"]),
                                     fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.asset(
+                                  AppImages.profile, // Replace with the path to your default image asset
+                                  fit: BoxFit.cover,
+                                );
+                              },
                                   )
                                 : Image.asset(
                                     AppImages.profile, // Default image if no profile image is found

@@ -77,7 +77,7 @@ class _LandingPageState extends State<LandingPage> {
           shape: CircularNotchedRectangle(),
           notchMargin: 8.0,
           child: Container(
-            height: 60,
+            height: 50,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [

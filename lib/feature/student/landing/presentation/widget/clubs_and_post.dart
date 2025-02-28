@@ -310,7 +310,7 @@ class ClubsAndPost extends StatelessWidget {
     String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
     return SizedBox(
-      height: height(context) / 2.5,
+      // height: height(context) / 2.5,
       child: Column(
         children: [
           Align(
@@ -318,17 +318,12 @@ class ClubsAndPost extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    nextScreen(context, ProfilePage());
-                  },
-                  child: Text(
-                    "All view",
-                    style: Theme.of(context)
-                        .textTheme
-                        .displayMedium!
-                        .copyWith(color: Colors.blue),
-                  ),
+                Text(
+                  "All view",
+                  style: Theme.of(context)
+                      .textTheme
+                      .displayMedium!
+                      .copyWith(color: Colors.blue),
                 ),
                 SizedBox(width: 20),
                 if (!isStudent)
@@ -348,10 +343,11 @@ class ClubsAndPost extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: height(context) / 2.5,
+            height: height(context) / 2.06,
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('clubPosts')
+
                   .orderBy('createdAt', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
@@ -411,62 +407,63 @@ class ClubsAndPost extends StatelessWidget {
                             padding: EdgeInsets.only(right: 16),
                             child: Icon(Icons.delete, color: Colors.white),
                           ),
-                          child: GestureDetector(
-                            onTap: () {
-                              nextScreen(context, ProfilePage());
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 10),
-                              child: Card(
-                                elevation: 3,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      ListTile(
-                                        contentPadding: EdgeInsets.all(0),
-                                        leading: CircleAvatar(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 10),
+                            child: Card(
+                              elevation: 3,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ListTile(
+                                      contentPadding: EdgeInsets.all(0),
+                                      leading: GestureDetector(
+                                        onTap: (){
+                                          nextScreen(context, ProfilePage(userId: postOwnerId!));
+
+                                        },
+                                        child: CircleAvatar(
                                           radius: 20,
                                           backgroundImage: NetworkImage(
                                             post['profilePic'] ?? AppImages.profile,
                                           ),
                                         ),
-                                        title: Text("${post['userName'] ?? "Anonymous"}"),
-                                        subtitle: Text(post['createdAt'].toDate().toString()),
                                       ),
-                                      Text(
-                                        "${post['message']}",
-                                        style: Theme.of(context).textTheme.displayMedium,
-                                      ),
-                                      const SizedBox(height: 10),
-                                      if (mediaPath.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 10),
-                                          child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
-                                              ? Container(
+                                      title: Text("${post['userName'] ?? "Anonymous"}"),
+                                      subtitle: Text(post['createdAt'].toDate().toString()),
+                                    ),
+                                    Text(
+                                      "${post['message']}",
+                                      style: Theme.of(context).textTheme.displayMedium,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    if (mediaPath.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
+                                            ? Container(
+                                          width: double.infinity,
+                                          // height: 200,
+                                          child: VideoPlayerWidget(mediaPath: mediaPath),
+                                        )
+                                            : ClipRRect(
+                                          borderRadius: BorderRadius.circular(8.0),
+                                          child: Image.file(
+                                            File(mediaPath),
                                             width: double.infinity,
-                                            height: 200,
-                                            child: VideoPlayerWidget(mediaPath: mediaPath),
-                                          )
-                                              : ClipRRect(
-                                            borderRadius: BorderRadius.circular(8.0),
-                                            child: Image.file(
-                                              File(mediaPath),
-                                              width: double.infinity,
-                                              height: 200,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
-                                                return const Center(
-                                                  child: Text("Image failed to load"),
-                                                );
-                                              },
-                                            ),
+                                            // height: 200,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return const Center(
+                                                child: Text("Image failed to load"),
+                                              );
+                                            },
                                           ),
                                         ),
-                                      const SizedBox(height: 20),
-                                    ],
-                                  ),
+                                      ),
+                                    const SizedBox(height: 20),
+                                  ],
                                 ),
                               ),
                             ),

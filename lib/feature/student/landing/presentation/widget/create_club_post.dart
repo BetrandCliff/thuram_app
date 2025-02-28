@@ -350,84 +350,86 @@ class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Enter your post:',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _messageController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.displaySmall,
-                  hintText: 'Write your post here...',
-                  border: OutlineInputBorder(),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Enter your post:',
+                  style: Theme.of(context).textTheme.displayMedium,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a message';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Pick Media'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            _pickMedia();
-                            Navigator.pop(context);
-                          },
-                          child: Text('Pick Image'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            _pickVideo();
-                            Navigator.pop(context);
-                          },
-                          child: Text('Pick Video'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 150,
-                  color: Colors.grey[200],
-                  child: _media == null
-                      ? Center(child: Text('Tap to select media'))
-                      : _thumbnailPath != null
-                          ? Image.file(
-                              File(_thumbnailPath!),
-                              fit: BoxFit.cover,
-                            )
-                          : _media!.path.endsWith('.mp4')
-                              ? Icon(
-                                  Icons.video_camera_front,
-                                  size: 50,
-                                  color: Colors.grey,
-                                )
-                              : Image.file(
-                                  _media!,
-                                  fit: BoxFit.cover,
-                                ),
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: _messageController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintStyle: Theme.of(context).textTheme.displaySmall,
+                    hintText: 'Write your post here...',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a message';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => _submitClubPost(context),
-                child: Text('Submit Post'),
-              ),
-            ],
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Pick Media'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              _pickMedia();
+                              Navigator.pop(context);
+                            },
+                            child: Text('Pick Image'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              _pickVideo();
+                              Navigator.pop(context);
+                            },
+                            child: Text('Pick Video'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 150,
+                    color: Colors.grey[200],
+                    child: _media == null
+                        ? Center(child: Text('Tap to select media'))
+                        : _thumbnailPath != null
+                            ? Image.file(
+                                File(_thumbnailPath!),
+                                fit: BoxFit.cover,
+                              )
+                            : _media!.path.endsWith('.mp4')
+                                ? Icon(
+                                    Icons.video_camera_front,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  )
+                                : Image.file(
+                                    _media!,
+                                    fit: BoxFit.cover,
+                                  ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => _submitClubPost(context),
+                  child: Text('Submit Post'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

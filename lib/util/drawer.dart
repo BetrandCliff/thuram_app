@@ -6,6 +6,8 @@ import 'package:thuram_app/feature/student/landing/presentation/widget/lost_and_
 import 'package:thuram_app/mainscreen.dart';
 import 'package:thuram_app/util/next-screen.dart';
 
+import '../feature/student/landing/presentation/pages/fetch_offices.dart';
+
 class DrawerItems extends StatelessWidget {
   const DrawerItems({super.key});
 
@@ -53,23 +55,14 @@ class DrawerItems extends StatelessWidget {
                 //   ),
                 // ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    nextScreen(context, ViewOfficers());
+                  },
                   child: const ListTile(
                     leading: Icon(Icons.location_on_sharp),
                     title: Text("Offices  and Outlets"),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: const ListTile(
-                    leading: Icon(Icons.search),
-                    title: Text("Search"),
-                  ),
-                )
-              ],
-            ),
-            Column(
-              children: [
                 GestureDetector(
                   onTap: () {
                     nextScreen(context, EditProfile());
@@ -79,13 +72,25 @@ class DrawerItems extends StatelessWidget {
                     title: Text("Edit Profile"),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: ListTile(
-                    leading: Icon(Icons.settings),
-                    title: Text("Settings"),
-                  ),
-                ),
+                // GestureDetector(
+                //   onTap: () {},
+                //   child: const ListTile(
+                //     leading: Icon(Icons.search),
+                //     title: Text("Search"),
+                //   ),
+                // )
+              ],
+            ),
+            Column(
+              children: [
+
+                // GestureDetector(
+                //   onTap: () {},
+                //   child: ListTile(
+                //     leading: Icon(Icons.settings),
+                //     title: Text("Settings"),
+                //   ),
+                // ),
                 GestureDetector(
                   onTap: () {
                     nextScreen(context, MainScreen());

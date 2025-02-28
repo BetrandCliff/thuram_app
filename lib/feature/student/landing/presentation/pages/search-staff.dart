@@ -120,8 +120,9 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
           itemBuilder: (context, index) {
             var item = items[index];
             bool isFollowing = followingIds.contains(item['id']);
+            print("STAFF ID ${item['id']}");
             return GestureDetector(
-              onTap: ()=>collectionName == 'staff'?nextScreen(context,ProfilePage()):null,
+              onTap: ()=>collectionName == 'staff'?nextScreen(context,ProfilePage(userId: item['id'],isStaff: true,)):null,
               child: Card(
                 margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(

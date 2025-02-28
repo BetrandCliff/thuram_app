@@ -266,14 +266,9 @@ class _AcademyState extends State<Academy> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () {
-                  nextScreen(context, ProfilePage());
-                },
-                child: Text(
-                  "All view",
-                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.blue),
-                ),
+              Text(
+                "All view",
+                style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.blue),
               ),
               SizedBox(width: 20),
               GestureDetector(
@@ -305,258 +300,263 @@ class _AcademyState extends State<Academy> {
               }
 
               var posts = snapshot.data!.docs;
+              for(int  i=0; i<posts.length; i++){
 
-              return ListView.builder(
-                itemCount: posts.length,
-                itemBuilder: (context, index) {
-                  var post = posts[index];
-                  String? mediaPath = post['mediaPath'];
-                  String postOwnerId = post['userId']; // Ensure the post has userId field
+              }
+              return SizedBox(
+                child: ListView.builder(
+                  itemCount: posts.length,
+                  itemBuilder: (context, index) {
+                    var post = posts[index];
+                    String? mediaPath = post['mediaPath'];
+                    String postOwnerId = post['userId']; // Ensure the post has userId field
 
-                  return Dismissible(
-                    key: Key(post.id),
-                    direction: currentUserId == postOwnerId
-                        ? DismissDirection.endToStart
-                        : DismissDirection.none, // Allow swipe only if user owns the post
-                    onDismissed: (direction) async {
-                      // Delete the post and its comments
-                      await FirebaseFirestore.instance.collection('academy').doc(post.id).delete();
-                      await FirebaseFirestore.instance
-                          .collection('academy')
-                          .doc(post.id)
-                          .collection('comments')
-                          .get()
-                          .then((snapshot) {
-                        for (DocumentSnapshot doc in snapshot.docs) {
-                          doc.reference.delete();
-                        }
-                      });
-                    },
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 16),
-                      child: Icon(Icons.delete, color: Colors.white),
-                    ),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 10),
-                      child: Card(
-                        elevation: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ListTile(
-                                onTap: () {
-                                  nextScreen(context, ProfilePage());
-                                },
-                                contentPadding: EdgeInsets.all(0),
-                                leading: CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
+                    return Dismissible(
+                      key: Key(post.id),
+                      direction: currentUserId == postOwnerId
+                          ? DismissDirection.endToStart
+                          : DismissDirection.none, // Allow swipe only if user owns the post
+                      onDismissed: (direction) async {
+                        // Delete the post and its comments
+                        await FirebaseFirestore.instance.collection('academy').doc(post.id).delete();
+                        await FirebaseFirestore.instance
+                            .collection('academy')
+                            .doc(post.id)
+                            .collection('comments')
+                            .get()
+                            .then((snapshot) {
+                          for (DocumentSnapshot doc in snapshot.docs) {
+                            doc.reference.delete();
+                          }
+                        });
+                      },
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: EdgeInsets.only(right: 16),
+                        child: Icon(Icons.delete, color: Colors.white),
+                      ),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        child: Card(
+                          elevation: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ListTile(
+                                  onTap: () {
+
+                                    nextScreen(context, ProfilePage(userId: post['userId'] ,));
+                                  },
+                                  contentPadding: EdgeInsets.all(0),
+                                  leading: CircleAvatar(
+                                    radius: 20,
+                                    backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
+                                  ),
+                                  title: Text(post['name']),
+                                  subtitle: Text(post['createdAt'].toDate().toString()),
                                 ),
-                                title: Text(post['name']),
-                                subtitle: Text(post['createdAt'].toDate().toString()),
-                              ),
-                              Text(
-                                post['message'],
-                                style: Theme.of(context).textTheme.displayMedium,
-                              ),
-                              const SizedBox(height: 20),
-                              if (mediaPath != null && mediaPath.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
-                                      ? Container(
-                                    width: double.infinity,
-                                    height: 200,
-                                    child: VideoPlayerWidget(mediaPath: mediaPath),
-                                  )
-                                      : ClipRRect(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    child: Image.file(
-                                      File(mediaPath),
+                                Text(
+                                  post['message'],
+                                  style: Theme.of(context).textTheme.displayMedium,
+                                ),
+                                const SizedBox(height: 20),
+                                if (mediaPath != null && mediaPath.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
+                                        ? Container(
                                       width: double.infinity,
-                                      height: 200,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Center(
-                                          child: Text("Image failed to load"),
-                                        );
-                                      },
+                                      // height: 200,
+                                      child: VideoPlayerWidget(mediaPath: mediaPath),
+                                    )
+                                        : ClipRRect(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      child: Image.file(
+                                        File(mediaPath),
+                                        width: double.infinity,
+                                        // height: 200,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Center(
+                                            child: Text("Image failed to load"),
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
-                                ),
-                              Row(
-                                children: [
-                                  Column(
-                                    children: [
-                                      StreamBuilder<DocumentSnapshot>(
-                                        stream: FirebaseFirestore.instance.collection('academy').doc(post.id).snapshots(),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData) return CircularProgressIndicator();
-
-                                          var data = snapshot.data!.data() as Map<String, dynamic>;
-
-                                          List<String> likes = [];
-                                          if (data['likes'] is List<dynamic>) {
-                                            likes = List<String>.from(data['likes']);
-                                          }
-
-                                          bool isLiked = likes.contains(currentUserId);
-
-                                          return Column(
-                                            children: [
-                                              IconButton(
-                                                onPressed: () {
-                                                  if (!isLiked) {
-                                                    FirebaseFirestore.instance.collection('academy').doc(post.id).update({
-                                                      'likes': FieldValue.arrayUnion([currentUserId])
-                                                    });
-                                                  } else {
-                                                    FirebaseFirestore.instance.collection('academy').doc(post.id).update({
-                                                      'likes': FieldValue.arrayRemove([currentUserId])
-                                                    });
-                                                  }
-                                                },
-                                                icon: Icon(
-                                                  isLiked ? Icons.favorite : Icons.favorite_border,
-                                                  color: isLiked ? Colors.red : Colors.grey,
-                                                ),
-                                              ),
-                                              Text("${likes.length} likes"),
-                                            ],
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      IconButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            showComments = !showComments;
-                                            commentIndex = index;
-                                          });
-
-                                          print("CURRENT TAPPED COMMENT IS  $commentIndex");
-                                        },
-                                        icon: const Icon(Icons.message),
-                                      ),
-                                      StreamBuilder<QuerySnapshot>(
-                                        stream: FirebaseFirestore.instance
-                                            .collection('academy')
-                                            .doc(post.id)
-                                            .collection('comments')
-                                            .snapshots(),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData) return CircularProgressIndicator();
-
-                                          var comments = snapshot.data!.docs;
-                                          return Text("${comments.length} comments");
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-
-                              if (showComments &&commentIndex==index)
-                                StreamBuilder<QuerySnapshot>(
-                                  stream: FirebaseFirestore.instance
-                                      .collection('academy')
-                                      .doc(post.id)
-                                      .collection('comments')
-                                      .orderBy('createdAt', descending: true)
-                                      .snapshots(),
-                                  builder: (context, snapshot) {
-                                    if (!snapshot.hasData) return CircularProgressIndicator();
-
-                                    var comments = snapshot.data!.docs;
-
-                                    return SizedBox(
-                                      height: comments.isNotEmpty ? 150 : 0,
-                                      child: ListView.builder(
-                                        shrinkWrap: true,
-                                        physics: NeverScrollableScrollPhysics(),
-                                        itemCount: comments.length,
-                                        itemBuilder: (context, i) {
-                                          var comment = comments[i];
-
-                                          return Dismissible(
-                                            key: Key(comment.id),
-                                            direction: DismissDirection.endToStart,
-                                            onDismissed: (direction) async {
-                                              await FirebaseFirestore.instance
-                                                  .collection('academy')
-                                                  .doc(post.id)
-                                                  .collection('comments')
-                                                  .doc(comment.id)
-                                                  .delete();
-                                            },
-                                            background: Container(
-                                              color: Colors.red,
-                                              alignment: Alignment.centerRight,
-                                              padding: EdgeInsets.only(right: 16),
-                                              child: Icon(Icons.delete, color: Colors.white),
-                                            ),
-                                            child: ListTile(
-                                              onTap: (){
-
-                                              },
-                                              leading: CircleAvatar(
-                                                radius: 20,
-                                                backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
-                                              ),
-                                              title: Text(comment['text']),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
-
-                              // Add comment input field and button
-                              if (showComments &&commentIndex==index)
                                 Row(
                                   children: [
+                                    Column(
+                                      children: [
+                                        StreamBuilder<DocumentSnapshot>(
+                                          stream: FirebaseFirestore.instance.collection('academy').doc(post.id).snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData) return CircularProgressIndicator();
 
+                                            var data = snapshot.data!.data() as Map<String, dynamic>;
 
-                                    Expanded(
-                                      child: TextField(
-                                        controller: commentController,
-                                        decoration: InputDecoration(
-                                          hintStyle: Theme.of(context).textTheme.displayMedium,
-                                          hintText: 'Add a comment...',
-                                          border: OutlineInputBorder(),
+                                            List<String> likes = [];
+                                            if (data['likes'] is List<dynamic>) {
+                                              likes = List<String>.from(data['likes']);
+                                            }
+
+                                            bool isLiked = likes.contains(currentUserId);
+
+                                            return Column(
+                                              children: [
+                                                IconButton(
+                                                  onPressed: () {
+                                                    if (!isLiked) {
+                                                      FirebaseFirestore.instance.collection('academy').doc(post.id).update({
+                                                        'likes': FieldValue.arrayUnion([currentUserId])
+                                                      });
+                                                    } else {
+                                                      FirebaseFirestore.instance.collection('academy').doc(post.id).update({
+                                                        'likes': FieldValue.arrayRemove([currentUserId])
+                                                      });
+                                                    }
+                                                  },
+                                                  icon: Icon(
+                                                    isLiked ? Icons.favorite : Icons.favorite_border,
+                                                    color: isLiked ? Colors.red : Colors.grey,
+                                                  ),
+                                                ),
+                                                Text("${likes.length} likes"),
+                                              ],
+                                            );
+                                          },
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      icon: Icon(Icons.send),
-                                      onPressed: () async {
-                                        if (commentController.text.isNotEmpty) {
-                                          await FirebaseFirestore.instance.collection('academy').doc(post.id).collection('comments').add({
-                                            'text': commentController.text,
-                                            'createdAt': FieldValue.serverTimestamp(),
-                                          });
+                                    Column(
+                                      children: [
+                                        IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              showComments = !showComments;
+                                              commentIndex = index;
+                                            });
 
-                                          commentController.clear();
-                                        }
-                                      },
+                                            print("CURRENT TAPPED COMMENT IS  $commentIndex");
+                                          },
+                                          icon: const Icon(Icons.message),
+                                        ),
+                                        StreamBuilder<QuerySnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('academy')
+                                              .doc(post.id)
+                                              .collection('comments')
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData) return CircularProgressIndicator();
+
+                                            var comments = snapshot.data!.docs;
+                                            return Text("${comments.length} comments");
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                            ],
+
+                                if (showComments &&commentIndex==index)
+                                  StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('academy')
+                                        .doc(post.id)
+                                        .collection('comments')
+                                        .orderBy('createdAt', descending: true)
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      if (!snapshot.hasData) return CircularProgressIndicator();
+
+                                      var comments = snapshot.data!.docs;
+
+                                      return SizedBox(
+                                        height: comments.isNotEmpty ? 150 : 0,
+                                        child: ListView.builder(
+                                          shrinkWrap: true,
+                                          physics: NeverScrollableScrollPhysics(),
+                                          itemCount: comments.length,
+                                          itemBuilder: (context, i) {
+                                            var comment = comments[i];
+
+                                            return Dismissible(
+                                              key: Key(comment.id),
+                                              direction: DismissDirection.endToStart,
+                                              onDismissed: (direction) async {
+                                                await FirebaseFirestore.instance
+                                                    .collection('academy')
+                                                    .doc(post.id)
+                                                    .collection('comments')
+                                                    .doc(comment.id)
+                                                    .delete();
+                                              },
+                                              background: Container(
+                                                color: Colors.red,
+                                                alignment: Alignment.centerRight,
+                                                padding: EdgeInsets.only(right: 16),
+                                                child: Icon(Icons.delete, color: Colors.white),
+                                              ),
+                                              child: ListTile(
+                                                onTap: (){
+
+                                                },
+                                                leading: CircleAvatar(
+                                                  radius: 20,
+                                                  backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
+                                                ),
+                                                title: Text(comment['text']),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  ),
+
+                                // Add comment input field and button
+                                if (showComments &&commentIndex==index)
+                                  Row(
+                                    children: [
+
+
+                                      Expanded(
+                                        child: TextField(
+                                          controller: commentController,
+                                          decoration: InputDecoration(
+                                            hintStyle: Theme.of(context).textTheme.displayMedium,
+                                            hintText: 'Add a comment...',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.send),
+                                        onPressed: () async {
+                                          if (commentController.text.isNotEmpty) {
+                                            await FirebaseFirestore.instance.collection('academy').doc(post.id).collection('comments').add({
+                                              'text': commentController.text,
+                                              'createdAt': FieldValue.serverTimestamp(),
+                                            });
+
+                                            commentController.clear();
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             },
           ),

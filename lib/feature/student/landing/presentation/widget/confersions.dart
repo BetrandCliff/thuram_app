@@ -489,14 +489,9 @@ class Confessions extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () {
-                  nextScreen(context, ProfilePage());
-                },
-                child: Text(
-                  "All view",
-                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.blue),
-                ),
+              Text(
+                "All view",
+                style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.blue),
               ),
               GestureDetector(
                 onTap: () {

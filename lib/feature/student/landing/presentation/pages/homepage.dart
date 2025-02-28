@@ -322,15 +322,18 @@ class HomePage extends StatelessWidget {
         ),
 
         // Expanded TabBarView
-        Expanded(
-          child: TabBarView(
-            children:  [
-              Academy(),
-              MissingItems(),
-              ClubsAndPost(isStudent: isStudent),
-              Confessions(),
-              // LostAndFound()
-            ],
+        SizedBox(
+          height: MediaQuery.of(context).size.height-(MediaQuery.of(context).size.height/2.04),
+          child: Expanded(
+            child: TabBarView(
+              children:  [
+                Academy(),
+                MissingItems(),
+                ClubsAndPost(isStudent: isStudent),
+                Confessions(),
+                // LostAndFound()
+              ],
+            ),
           ),
         ),
       ],

@@ -69,106 +69,175 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
 
 
 
-import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import 'package:http/http.dart' as http;
+
+import 'package:http/http.dart' as http;
+
+import '../../../../../core/constants/constants.dart';
 
 class PostLostFoundScreen extends StatefulWidget {
   const PostLostFoundScreen({Key? key}) : super(key: key);
 
   @override
-  _PostLostFoundScreenState createState() =>
-      _PostLostFoundScreenState();
+  _PostLostFoundScreenState createState() => _PostLostFoundScreenState();
 }
 
 class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _messageController = TextEditingController();
-  File? _media; // Can be either an image or a video
-  String? _thumbnailPath; // Path to the generated thumbnail if video is selected
+  final TextEditingController _messageController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  // Pick an image or video
-  Future<void> _pickMedia() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  File? _media;
+  String? _thumbnailPath;
+  bool _isUploading = false;
+  // final String fileURL = "YOUR_API_UPLOAD_URL"; // Replace with actual API URL
 
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _media = File(pickedFile.path);
-        _thumbnailPath = null; // Reset thumbnail path in case we are picking an image
+        _thumbnailPath = null;
       });
     }
   }
 
-  // Pick a video and generate a thumbnail
   Future<void> _pickVideo() async {
     final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       setState(() {
         _media = File(pickedFile.path);
-        // _generateThumbnail(pickedFile.path); // Generate thumbnail for the video
+        // _generateThumbnail(pickedFile.path);
       });
     }
   }
 
-  // // Generate thumbnail for video
   // Future<void> _generateThumbnail(String videoPath) async {
   //   final String? thumbnail = await VideoThumbnail.thumbnailFile(
   //     video: videoPath,
   //     thumbnailPath: (await getTemporaryDirectory()).path,
   //     imageFormat: ImageFormat.JPEG,
-  //     maxWidth: 200, // Width of the thumbnail
-  //     quality: 75, // Quality of the thumbnail
+  //     maxWidth: 200,
+  //     quality: 75,
   //   );
-
-  //   setState(() {
-  //     _thumbnailPath = thumbnail;
-  //   });
+  //
+  //   if (thumbnail != null) {
+  //     setState(() {
+  //       _thumbnailPath = thumbnail;
+  //     });
+  //   }
   // }
 
-  // Submit confession (image/video and message)
-  Future<void> _submitConfession(BuildContext context) async {
+  Future<String?> _uploadMedia() async {
+    if (_media == null) return null;
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse(fileURL.trim()));
+      request.files.add(await http.MultipartFile.fromPath('file', _media!.path));
+
+      var response = await request.send();
+      if (response.statusCode == 201) {
+        String responseBody = await response.stream.bytesToString();
+        return responseBody; // Expecting the file URL from API
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to upload media"), backgroundColor: Colors.red),
+        );
+        return null;
+      }
+    } catch (e) {
+      print("Upload error: $e");
+      return null;
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
+  }
+
+  Future<void> _submitPost() async {
     if (_formKey.currentState!.validate()) {
       final message = _messageController.text;
-      String? mediaPath;
-
-      if (_media != null) {
-        mediaPath = _media!.path;
-      }
+      String? mediaPath = await _uploadMedia();
 
       try {
-        // Your Firestore upload logic here
-        // For example, upload to Firestore:
         await FirebaseFirestore.instance.collection('lostFoundPosts').add({
           'message': message,
           'userId': FirebaseAuth.instance.currentUser?.uid,
           'createdAt': FieldValue.serverTimestamp(),
-          'userName': FirebaseAuth.instance.currentUser?.displayName,
+          'userName': FirebaseAuth.instance.currentUser?.displayName ?? "Anonymous",
           'profilePic': 'assets/profile_placeholder.png',
-          'mediaPath': mediaPath, // Store the media path
+          'mediaPath': mediaPath,
           'status': 'pending',
         });
 
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Post submitted successfully"), backgroundColor: Colors.green),
+        );
         Navigator.pop(context);
       } catch (e) {
-        print("Error submitting confession: $e");
+        print("Error submitting post: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit confession. Please try again later.'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Failed to submit post. Try again later.'), backgroundColor: Colors.red),
         );
       }
+    }
+  }
+
+  void _showMediaPicker() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Pick Media'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _pickImage();
+              Navigator.pop(context);
+            },
+            child: Text('Pick Image'),
+          ),
+          TextButton(
+            onPressed: () {
+              _pickVideo();
+              Navigator.pop(context);
+            },
+            child: Text('Pick Video'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mediaPreview() {
+    if (_media == null) {
+      return Center(child: Text('Tap to select media'));
+    } else if (_thumbnailPath != null) {
+      return Image.file(File(_thumbnailPath!), fit: BoxFit.cover);
+    } else if (_media!.path.endsWith('.mp4')) {
+      return Icon(Icons.video_camera_front, size: 50, color: Colors.grey);
+    } else {
+      return Image.file(_media!, fit: BoxFit.cover);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Post Missing Item'),
-      ),
+      appBar: AppBar(title: Text('Post Missing Item')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -176,80 +245,32 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Enter your confession:',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
-              SizedBox(height: 10),
+              Text('Enter your post:', style: Theme.of(context).textTheme.displayMedium),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _messageController,
                 maxLines: 4,
                 decoration: InputDecoration(
                   hintStyle: Theme.of(context).textTheme.displaySmall,
-                  hintText: 'Write your confession here...',
+                  hintText: 'Write your message here...',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a message';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter a message' : null,
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: () {
-                  // Show option to pick image or video
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Pick Media'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            _pickMedia(); // Pick image
-                            Navigator.pop(context);
-                          },
-                          child: Text('Pick Image'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            _pickVideo(); // Pick video
-                            Navigator.pop(context);
-                          },
-                          child: Text('Pick Video'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                onTap: _showMediaPicker,
                 child: Container(
                   width: double.infinity,
                   height: 150,
                   color: Colors.grey[200],
-                  child: _media == null
-                      ? Center(child: Text('Tap to select media'))
-                      : _thumbnailPath != null
-                          ? Image.file(
-                              File(_thumbnailPath!),
-                              fit: BoxFit.cover,
-                            )
-                          : _media!.path.endsWith('.mp4')
-                              ? Icon(
-                                  Icons.video_camera_front,
-                                  size: 50,
-                                  color: Colors.grey,
-                                )
-                              : Image.file(
-                                  _media!,
-                                  fit: BoxFit.cover,
-                                ),
+                  child: _mediaPreview(),
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => _submitConfession(context),
-                child: Text('Submit Confession'),
+                onPressed: _isUploading ? null : _submitPost,
+                child: _isUploading ? CircularProgressIndicator() : Text('Submit Post'),
               ),
             ],
           ),

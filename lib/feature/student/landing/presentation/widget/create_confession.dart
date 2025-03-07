@@ -9,10 +9,11 @@ import 'package:thuram_app/util/next-screen.dart';
 import 'package:thuram_app/util/widthandheight.dart';
 import '../../../../../core/constants/asset-paths.dart';
 import '../../../../../core/constants/colors.dart';
+import '../../../../../core/constants/constants.dart';
 import '../../../../admin/presentations/database/db.dart';
 
 
-
+import 'package:http/http.dart' as http;
 
 
 class CreateConfessionScreen extends StatefulWidget {
@@ -23,77 +24,87 @@ class CreateConfessionScreen extends StatefulWidget {
       _CreateConfessionScreenState();
 }
 
+
+
+
 class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _messageController = TextEditingController();
-  File? _media; // Can be either an image or a video
-  String? _thumbnailPath;
+  final TextEditingController _messageController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
-  final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  /// Pick an image
-  Future<void> _pickMedia() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  File? _mediaFile;
+  String? _mediaUrl;
+  String? _mediaType; // 'image' or 'video'
+
+  /// Pick media (image or video)
+  Future<void> _pickMedia({required bool isVideo}) async {
+    final pickedFile = isVideo
+        ? await _picker.pickVideo(source: ImageSource.gallery)
+        : await _picker.pickImage(source: ImageSource.gallery);
+
     if (pickedFile != null) {
       setState(() {
-        _media = File(pickedFile.path);
-        _thumbnailPath = null;
+        _mediaFile = File(pickedFile.path);
+        _mediaType = isVideo ? 'video' : 'image';
       });
     }
   }
 
-  /// Pick a video
-  Future<void> _pickVideo() async {
-    final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _media = File(pickedFile.path);
-        _thumbnailPath = null;
-      });
+  /// Upload media file to the server
+  Future<String?> _uploadMedia(File file) async {
+    final uri = Uri.parse(fileURL.trim()); // Change this to your API URL
+    var request = http.MultipartRequest("POST", uri);
+
+    request.files.add(await http.MultipartFile.fromPath('file', file.path));
+    var response = await request.send();
+
+    if (response.statusCode == 201) {
+      return await response.stream.bytesToString(); // Server returns file URL
+    } else {
+      return null;
     }
   }
 
   /// Submit confession
   Future<void> _submitConfession(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      final message = _messageController.text;
-      if (_media != null) {
-        final mediaPath = _media!.path;
-        final mediaType = mediaPath.endsWith('.mp4') ? 'video' : 'image';
+    if (!_formKey.currentState!.validate()) return;
 
-        try {
-          // Store media path in SQLite and get the inserted ID
-          int mediaId = await _dbHelper.insertMedia('confessions', mediaPath, mediaType);
+    final message = _messageController.text;
+    final user = FirebaseAuth.instance.currentUser;
 
-          // Upload confession details to Firestore, including SQLite media ID
-          await FirebaseFirestore.instance.collection('confessions').add({
-            'message': message,
-            'createdAt': FieldValue.serverTimestamp(),
-            'userName': FirebaseAuth.instance.currentUser?.displayName ?? "Anonymous",
-            'profilePic': 'assets/profile_placeholder.png',
-            'mediaId': mediaId, // Store SQLite media ID
-            'status': 'pending',
-            'userId': FirebaseAuth.instance.currentUser?.uid,
-          });
+    if (_mediaFile != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Uploading media...')),
+      );
 
-          Navigator.pop(context);
-        } catch (e) {
-          print("Error submitting confession: $e");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to submit confession. Please try again later.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } else {
+      final uploadedMediaUrl = await _uploadMedia(_mediaFile!);
+      if (uploadedMediaUrl == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Please select an image or video'),
-            backgroundColor: Colors.orange,
-          ),
+          SnackBar(content: Text('Failed to upload media. Try again.'), backgroundColor: Colors.red),
         );
+        return;
       }
+      _mediaUrl = uploadedMediaUrl;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('confessions').add({
+        'message': message,
+        'createdAt': FieldValue.serverTimestamp(),
+        'userName': user?.displayName ?? "Anonymous",
+        'profilePic': user?.photoURL ?? 'assets/profile_placeholder.png',
+        'mediaUrl': _mediaUrl,
+        'type': _mediaType,
+        'status': 'pending',
+        'userId': user?.uid,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Confession submitted!')));
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -114,53 +125,32 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
                 controller: _messageController,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  hintStyle: Theme.of(context).textTheme.displaySmall,
                   hintText: 'Write your confession here...',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a message';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter a message' : null,
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: () {
-                  // Show option to pick image or video
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Pick Media'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            _pickMedia();
-                            Navigator.pop(context);
-                          },
-                          child: Text('Pick Image'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            _pickVideo();
-                            Navigator.pop(context);
-                          },
-                          child: Text('Pick Video'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Select Media'),
+                    actions: [
+                      TextButton(onPressed: () => _pickMedia(isVideo: false), child: Text('Pick Image')),
+                      TextButton(onPressed: () => _pickMedia(isVideo: true), child: Text('Pick Video')),
+                    ],
+                  ),
+                ),
                 child: Container(
                   width: double.infinity,
                   height: 150,
                   color: Colors.grey[200],
-                  child: _media == null
+                  child: _mediaFile == null
                       ? Center(child: Text('Tap to select media'))
-                      : _media!.path.endsWith('.mp4')
-                          ? Icon(Icons.video_camera_front, size: 50, color: Colors.grey)
-                          : Image.file(_media!, fit: BoxFit.cover),
+                      : _mediaType == 'video'
+                      ? Icon(Icons.video_camera_front, size: 50, color: Colors.grey)
+                      : Image.file(_mediaFile!, fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(height: 16),
@@ -175,6 +165,7 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
     );
   }
 }
+
 
 
 

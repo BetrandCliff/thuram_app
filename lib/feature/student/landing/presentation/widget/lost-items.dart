@@ -186,10 +186,9 @@ import 'package:sqflite/sqflite.dart';
 class MissingItems extends StatelessWidget {
   const MissingItems({super.key});
 
-  // Function to delete post from SQLite
-  Future<void> deletePostFromSQLite(String postId) async {
-    final Database db = await openDatabase('academy.db');
-    await db.delete('lostFoundPosts', where: 'id = ?', whereArgs: [postId]);
+  // Function to delete post from Firestore
+  Future<void> deletePostFromFirestore(String postId) async {
+    await FirebaseFirestore.instance.collection('lostFoundPosts').doc(postId).delete();
   }
 
   @override
@@ -205,22 +204,16 @@ class MissingItems extends StatelessWidget {
             children: [
               Text(
                 "All view",
-                style: Theme.of(context)
-                    .textTheme
-                    .displayMedium!
-                    .copyWith(color: Colors.blue),
+                style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.blue),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               GestureDetector(
                 onTap: () {
-                  nextScreen(context, PostLostFoundScreen());
+                  nextScreen(context, const PostLostFoundScreen());
                 },
                 child: Text(
                   "Create Post",
-                  style: Theme.of(context)
-                      .textTheme
-                      .displayMedium!
-                      .copyWith(color: Colors.blue),
+                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.blue),
                 ),
               ),
             ],
@@ -234,15 +227,15 @@ class MissingItems extends StatelessWidget {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               if (snapshot.hasError) {
-                return Center(child: Text('Something went wrong!'));
+                return const Center(child: Text('Something went wrong!'));
               }
 
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(child: Text('No posts available.'));
+                return const Center(child: Text('No posts available.'));
               }
 
               var posts = snapshot.data!.docs;
@@ -252,33 +245,44 @@ class MissingItems extends StatelessWidget {
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
                   var post = posts[index];
-                  String? mediaPath = post['mediaPath'];
+                  String? mediaPath = post['mediaPath']; // Now fetching from Firestore
                   String? postOwnerId = post['userId'];
+                  Timestamp? timestamp = post['createdAt'] as Timestamp?;
 
                   return Dismissible(
                     key: Key(post.id),
-                    direction: currentUserId == postOwnerId
-                        ? DismissDirection.endToStart
-                        : DismissDirection.none,
+                    direction: currentUserId == postOwnerId ? DismissDirection.endToStart : DismissDirection.none,
+                    confirmDismiss: (direction) async {
+                      return await showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text("Delete Post"),
+                          content: const Text("Are you sure you want to delete this post?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                     onDismissed: (direction) async {
-                      // Delete from Firestore
-                      await FirebaseFirestore.instance
-                          .collection('lostFoundPosts')
-                          .doc(post.id)
-                          .delete();
-
-                      // Delete from SQLite
-                      await deletePostFromSQLite(post.id);
+                      await deletePostFromFirestore(post.id);
                     },
                     background: Container(
                       color: Colors.red,
                       alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 16),
-                      child: Icon(Icons.delete, color: Colors.white),
+                      padding: const EdgeInsets.only(right: 16),
+                      child: const Icon(Icons.delete, color: Colors.white),
                     ),
                     child: GestureDetector(
                       onTap: () {
-                        nextScreen(context, ProfilePage(userId: postOwnerId!,));
+                        nextScreen(context, ProfilePage(userId: postOwnerId!));
                       },
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 10),
@@ -290,53 +294,43 @@ class MissingItems extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ListTile(
-                                  contentPadding: EdgeInsets.all(0),
+                                  contentPadding: EdgeInsets.zero,
                                   leading: CircleAvatar(
                                     radius: 20,
-                                    backgroundImage: NetworkImage(
-                                        post['profilePic'] ??
-                                            AppImages.profile),
+                                    backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
                                   ),
                                   title: Text(post['userName'] ?? "Anonymous"),
-                                  subtitle: Text(
-                                      post['createdAt'].toDate().toString()),
+                                  subtitle: Text(timestamp != null ? timestamp.toDate().toString() : "Unknown date"),
                                 ),
                                 Text(
                                   post['message'],
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium,
+                                  style: Theme.of(context).textTheme.displayMedium,
                                 ),
+                                Text("Path $mediaPath"),
                                 const SizedBox(height: 20),
                                 if (mediaPath != null && mediaPath.isNotEmpty)
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10),
-                                    child: mediaPath.endsWith('.mp4') ||
-                                        mediaPath.endsWith('.mov')
-                                        ? Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    child: mediaPath.startsWith('http')
+                                        ? mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
+                                        ? SizedBox(
                                       width: double.infinity,
                                       height: 200,
-                                      child: VideoPlayerWidget(
-                                          mediaPath: mediaPath),
+                                      child: VideoPlayerWidget(mediaPath: mediaPath),
                                     )
                                         : ClipRRect(
-                                      borderRadius:
-                                      BorderRadius.circular(8.0),
-                                      child: Image.file(
-                                        File(mediaPath),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      child: Image.network(
+                                        mediaPath,
                                         width: double.infinity,
                                         height: 200,
                                         fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return const Center(
-                                            child: Text(
-                                                "Image failed to load"),
-                                          );
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Center(child: Text("Image failed to load"));
                                         },
                                       ),
-                                    ),
+                                    )
+                                        : const SizedBox(), // No image if mediaPath is invalid
                                   ),
                               ],
                             ),
@@ -354,3 +348,177 @@ class MissingItems extends StatelessWidget {
     );
   }
 }
+
+
+//
+// class MissingItems extends StatelessWidget {
+//   const MissingItems({super.key});
+//
+//   // Function to delete post from SQLite
+//   Future<void> deletePostFromSQLite(String postId) async {
+//     final Database db = await openDatabase('academy.db');
+//     await db.delete('lostFoundPosts', where: 'id = ?', whereArgs: [postId]);
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+//
+//     return Column(
+//       children: [
+//         Align(
+//           alignment: Alignment.topRight,
+//           child: Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(
+//                 "All view",
+//                 style: Theme.of(context)
+//                     .textTheme
+//                     .displayMedium!
+//                     .copyWith(color: Colors.blue),
+//               ),
+//               SizedBox(width: 20),
+//               GestureDetector(
+//                 onTap: () {
+//                   nextScreen(context, PostLostFoundScreen());
+//                 },
+//                 child: Text(
+//                   "Create Post",
+//                   style: Theme.of(context)
+//                       .textTheme
+//                       .displayMedium!
+//                       .copyWith(color: Colors.blue),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//         Expanded(
+//           child: StreamBuilder<QuerySnapshot>(
+//             stream: FirebaseFirestore.instance
+//                 .collection('lostFoundPosts')
+//                 .orderBy('createdAt', descending: true)
+//                 .snapshots(),
+//             builder: (context, snapshot) {
+//               if (snapshot.connectionState == ConnectionState.waiting) {
+//                 return Center(child: CircularProgressIndicator());
+//               }
+//
+//               if (snapshot.hasError) {
+//                 return Center(child: Text('Something went wrong!'));
+//               }
+//
+//               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+//                 return Center(child: Text('No posts available.'));
+//               }
+//
+//               var posts = snapshot.data!.docs;
+//
+//               return ListView.builder(
+//                 shrinkWrap: true,
+//                 itemCount: posts.length,
+//                 itemBuilder: (context, index) {
+//                   var post = posts[index];
+//                   String? mediaPath = post['mediaPath'];
+//                   String? postOwnerId = post['userId'];
+//
+//                   return Dismissible(
+//                     key: Key(post.id),
+//                     direction: currentUserId == postOwnerId
+//                         ? DismissDirection.endToStart
+//                         : DismissDirection.none,
+//                     onDismissed: (direction) async {
+//                       // Delete from Firestore
+//                       await FirebaseFirestore.instance
+//                           .collection('lostFoundPosts')
+//                           .doc(post.id)
+//                           .delete();
+//
+//                       // Delete from SQLite
+//                       await deletePostFromSQLite(post.id);
+//                     },
+//                     background: Container(
+//                       color: Colors.red,
+//                       alignment: Alignment.centerRight,
+//                       padding: EdgeInsets.only(right: 16),
+//                       child: Icon(Icons.delete, color: Colors.white),
+//                     ),
+//                     child: GestureDetector(
+//                       onTap: () {
+//                         nextScreen(context, ProfilePage(userId: postOwnerId!,));
+//                       },
+//                       child: Container(
+//                         margin: const EdgeInsets.symmetric(vertical: 10),
+//                         child: Card(
+//                           elevation: 3,
+//                           child: Padding(
+//                             padding: const EdgeInsets.all(8.0),
+//                             child: Column(
+//                               crossAxisAlignment: CrossAxisAlignment.start,
+//                               children: [
+//                                 ListTile(
+//                                   contentPadding: EdgeInsets.all(0),
+//                                   leading: CircleAvatar(
+//                                     radius: 20,
+//                                     backgroundImage: NetworkImage(
+//                                         post['profilePic'] ??
+//                                             AppImages.profile),
+//                                   ),
+//                                   title: Text(post['userName'] ?? "Anonymous"),
+//                                   subtitle: Text(
+//                                       post['createdAt'].toDate().toString()),
+//                                 ),
+//                                 Text(
+//                                   post['message'],
+//                                   style: Theme.of(context)
+//                                       .textTheme
+//                                       .displayMedium,
+//                                 ),
+//                                 const SizedBox(height: 20),
+//                                 if (mediaPath != null && mediaPath.isNotEmpty)
+//                                   Padding(
+//                                     padding: const EdgeInsets.symmetric(
+//                                         vertical: 10),
+//                                     child: mediaPath.endsWith('.mp4') ||
+//                                         mediaPath.endsWith('.mov')
+//                                         ? Container(
+//                                       width: double.infinity,
+//                                       height: 200,
+//                                       child: VideoPlayerWidget(
+//                                           mediaPath: mediaPath),
+//                                     )
+//                                         : ClipRRect(
+//                                       borderRadius:
+//                                       BorderRadius.circular(8.0),
+//                                       child: Image.file(
+//                                         File(mediaPath),
+//                                         width: double.infinity,
+//                                         height: 200,
+//                                         fit: BoxFit.cover,
+//                                         errorBuilder:
+//                                             (context, error, stackTrace) {
+//                                           return const Center(
+//                                             child: Text(
+//                                                 "Image failed to load"),
+//                                           );
+//                                         },
+//                                       ),
+//                                     ),
+//                                   ),
+//                               ],
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   );
+//                 },
+//               );
+//             },
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }

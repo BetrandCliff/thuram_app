@@ -457,33 +457,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
 
 
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:video_player/video_player.dart';
+
 class Confessions extends StatelessWidget {
   const Confessions({super.key});
-
-  Future<String?> _getMediaPathFromDb(int mediaId) async {
-    final db = await DatabaseHelper().database;
-    final List<Map<String, dynamic>> mediaRecords = await db.query(
-      'confessions',
-      where: 'id = ?',
-      whereArgs: [mediaId],
-    );
-    if (mediaRecords.isNotEmpty) {
-      return mediaRecords.first['mediaPath'] as String?;
-    }
-    return null;
-  }
-
-  Future<void> deletePostFromSQLite(int mediaId) async {
-    final Database db = await DatabaseHelper().database;
-    await db.delete('confessions', where: 'id = ?', whereArgs: [mediaId]);
-  }
 
   @override
   Widget build(BuildContext context) {
     String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
     return SizedBox(
-      height: height(context) / 2.5,
+      height: MediaQuery.of(context).size.height / 2.5,
       child: Column(
         children: [
           Row(
@@ -495,13 +483,13 @@ class Confessions extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () {
-                  nextScreen(context, CreateConfessionScreen());
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => CreateConfessionScreen()));
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     "Create Confession",
-                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                    style: Theme.of(context).textTheme.displaySmall!.copyWith(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -533,84 +521,66 @@ class Confessions extends StatelessWidget {
                   itemCount: confessions.length,
                   itemBuilder: (context, index) {
                     var confession = confessions[index];
-                    int mediaId = confession['mediaId'] ?? 0;
+                    String? mediaUrl = confession['mediaUrl']; // Fetch media URL directly from Firestore
+                    String? mediaType = confession['mediaType']; // Image or Video
                     String? postOwnerId = confession['userId'];
 
-                    return FutureBuilder<String?>(
-                      future: _getMediaPathFromDb(mediaId),
-                      builder: (context, mediaSnapshot) {
-                        if (mediaSnapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-                        if (mediaSnapshot.hasError || !mediaSnapshot.hasData) {
-                          return Center(child: Text('Failed to load media.'));
-                        }
-
-                        String mediaPath = mediaSnapshot.data ?? "";
-
-                        return Dismissible(
-                          key: Key(confession.id),
-                          direction: currentUserId == postOwnerId ? DismissDirection.endToStart : DismissDirection.none,
-                          onDismissed: (direction) async {
-                            await FirebaseFirestore.instance.collection('confessions').doc(confession.id).delete();
-                            await deletePostFromSQLite(mediaId);
-                          },
-                          background: Container(
-                            color: Colors.red,
-                            alignment: Alignment.centerRight,
-                            padding: EdgeInsets.only(right: 16),
-                            child: Icon(Icons.delete, color: Colors.white),
-                          ),
-                          child: Card(
-                            elevation: 3,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    leading: CircleAvatar(
-                                      radius: 20,
-                                      backgroundImage: NetworkImage(confession['profilePic'] ?? AppImages.profile),
-                                    ),
-                                    title: Text(confession['userName'] ?? 'Anonymous'),
-                                    subtitle: Text(confession['createdAt'].toDate().toString()),
-                                  ),
-                                  Text(
-                                    confession['message'] ?? "No message available",
-                                    style: Theme.of(context).textTheme.displayMedium,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  if (mediaPath.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
-                                      child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
-                                          ? Container(
-                                        width: double.infinity,
-                                        height: 200,
-                                        child: VideoPlayerWidget(mediaPath: mediaPath),
-                                      )
-                                          : ClipRRect(
-                                        borderRadius: BorderRadius.circular(8.0),
-                                        child: Image.file(
-                                          File(mediaPath),
-                                          width: double.infinity,
-                                          height: 200,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Center(child: Text("Image failed to load"));
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  const SizedBox(height: 20),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
+                    return Dismissible(
+                      key: Key(confession.id),
+                      direction: currentUserId == postOwnerId ? DismissDirection.endToStart : DismissDirection.none,
+                      onDismissed: (direction) async {
+                        await FirebaseFirestore.instance.collection('confessions').doc(confession.id).delete();
                       },
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: EdgeInsets.only(right: 16),
+                        child: Icon(Icons.delete, color: Colors.white),
+                      ),
+                      child: Card(
+                        elevation: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: NetworkImage(confession['profilePic'] ?? 'assets/profile_placeholder.png'),
+                                ),
+                                title: Text(confession['userName'] ?? 'Anonymous'),
+                                subtitle: Text(confession['createdAt'].toDate().toString()),
+                              ),
+                              Text(
+                                confession['message'] ?? "No message available",
+                                style: Theme.of(context).textTheme.displayMedium,
+                              ),
+                              const SizedBox(height: 10),
+                              if (mediaUrl != null && mediaUrl.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  child: mediaType == 'video'
+                                      ? VideoPlayerWidget( mediaPath: mediaUrl,)
+                                      : ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: Image.network(
+                                      mediaUrl,
+                                      width: double.infinity,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Center(child: Text("Image failed to load"));
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
+                        ),
+                      ),
                     );
                   },
                 );
@@ -622,5 +592,7 @@ class Confessions extends StatelessWidget {
     );
   }
 }
+
+
 
 

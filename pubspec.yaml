@@ -59,6 +59,9 @@ dependencies:
   flutter_gemini: ^3.0.0
   dash_chat_2: ^0.0.21
   file_picker: ^9.0.1
+
+  cached_network_image: ^3.3.0
+
   # video_thumbnail: 
 
 

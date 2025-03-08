@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:thuram_app/util/next-screen.dart';
 
 import '../../../../../core/constants/asset-paths.dart';
+import '../../../../../util/mediaviewer.dart';
 import '../../../../../util/video-player.dart';
 import '../pages/profile.dart';
 import 'academy_post.dart';
@@ -115,23 +116,24 @@ class _AcademyState extends State<Academy> {
                               style: Theme.of(context).textTheme.displayMedium,
                             ),
                             const SizedBox(height: 20),
-                            if (mediaPath != null && mediaPath.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
-                                    ? VideoPlayerWidget(mediaPath: mediaPath)
-                                    : ClipRRect(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  child: Image.network(
-                                    mediaPath,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Center(child: Text("Image failed to load"));
-                                    },
-                                  ),
-                                ),
-                              ),
+                            MediaViewer(mediaPath: mediaPath??"",),
+                            // if (mediaPath != null && mediaPath.isNotEmpty)
+                            //   Padding(
+                            //     padding: const EdgeInsets.symmetric(vertical: 10),
+                            //     child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
+                            //         ? VideoPlayerWidget(mediaPath: mediaPath)
+                            //         : ClipRRect(
+                            //       borderRadius: BorderRadius.circular(8.0),
+                            //       child: Image.network(
+                            //         mediaPath,
+                            //         width: double.infinity,
+                            //         fit: BoxFit.cover,
+                            //         errorBuilder: (context, error, stackTrace) {
+                            //           return const Center(child: Text("Image failed to load"));
+                            //         },
+                            //       ),
+                            //     ),
+                            //   ),
                             Row(
                               children: [
                                 LikeButton(postId: post.id, currentUserId: currentUserId),

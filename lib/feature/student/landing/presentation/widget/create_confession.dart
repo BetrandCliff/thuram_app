@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -59,7 +60,9 @@ class _CreateConfessionScreenState extends State<CreateConfessionScreen> {
     var response = await request.send();
 
     if (response.statusCode == 201) {
-      return await response.stream.bytesToString(); // Server returns file URL
+      String responseBody =  await response.stream.bytesToString(); // Server returns file URL
+      var jsonResponse = jsonDecode(responseBody);
+      return jsonResponse['url'];
     } else {
       return null;
     }

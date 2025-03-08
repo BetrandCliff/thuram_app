@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -276,7 +277,7 @@ class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
   String? _thumbnailPath;
   String? type;
   final ImagePicker _picker = ImagePicker();
-
+  bool _isUploading = false;
   String? mediaUrl; // To store uploaded media URL
   // final String fileURL = "https://todo-app-backend-h8w0.onrender.com/upload/file"; // API endpoint
 
@@ -313,7 +314,8 @@ class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
       var response = await request.send();
       if (response.statusCode == 201) {
         String responseBody = await response.stream.bytesToString();
-        return responseBody; // Server should return the file URL
+        var jsonResponse = jsonDecode(responseBody);
+        return jsonResponse['url']; // Server should return the file URL
       } else {
         print("Upload failed: ${response.statusCode}");
         return null;
@@ -451,8 +453,8 @@ class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => _submitClubPost(context),
-                  child: Text('Submit Post'),
+                  onPressed: _isUploading ? null :()=>_submitClubPost(context),
+                  child:_isUploading ? CircularProgressIndicator() : Text('Submit Post'),
                 ),
               ],
             ),

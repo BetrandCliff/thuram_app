@@ -11,6 +11,7 @@ import 'package:thuram_app/util/widthandheight.dart';
 
 import '../../../../../core/constants/asset-paths.dart';
 import '../../../../../core/constants/colors.dart';
+import '../../../../../util/mediaviewer.dart';
 import '../../../../../util/video-player.dart';
 import '../../../../admin/presentations/database/db.dart';
 import '../pages/profile.dart';
@@ -558,24 +559,25 @@ class Confessions extends StatelessWidget {
                                 style: Theme.of(context).textTheme.displayMedium,
                               ),
                               const SizedBox(height: 10),
-                              if (mediaUrl != null && mediaUrl.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  child: mediaType == 'video'
-                                      ? VideoPlayerWidget( mediaPath: mediaUrl,)
-                                      : ClipRRect(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    child: Image.network(
-                                      mediaUrl,
-                                      width: double.infinity,
-                                      height: 200,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Center(child: Text("Image failed to load"));
-                                      },
-                                    ),
-                                  ),
-                                ),
+                              MediaViewer(mediaPath: mediaUrl??"",),
+                              // if (mediaUrl != null && mediaUrl.isNotEmpty)
+                              //   Padding(
+                              //     padding: const EdgeInsets.symmetric(vertical: 10),
+                              //     child: mediaType == 'video'
+                              //         ? VideoPlayerWidget( mediaPath: mediaUrl,)
+                              //         : ClipRRect(
+                              //       borderRadius: BorderRadius.circular(8.0),
+                              //       child: Image.network(
+                              //         mediaUrl,
+                              //         width: double.infinity,
+                              //         height: 200,
+                              //         fit: BoxFit.cover,
+                              //         errorBuilder: (context, error, stackTrace) {
+                              //           return const Center(child: Text("Image failed to load"));
+                              //         },
+                              //       ),
+                              //     ),
+                              //   ),
                               const SizedBox(height: 20),
                             ],
                           ),

@@ -10,6 +10,7 @@ import 'package:thuram_app/util/next-screen.dart';
 import '../../../../../core/constants/values.dart';
 import '../../../../../util/custom-description-card.dart';
 import '../../../chat/chat-gpt.dart';
+import '../../../chat/chatlist.dart';
 import '../../../chat/gemini_chat.dart';
 import '../../../student/landing/presentation/pages/courses.dart';
 import '../../../student/landing/presentation/pages/following.dart';
@@ -63,6 +64,10 @@ class _LecturerLandingPageState extends State<LecturerLandingPage> {
               },
               icon: Icon(Icons.menu)),
           centerTitle: true,
+          actions: [
+            IconButton(onPressed: (){nextScreen(context, ChatListScreen());}, icon: Icon(Icons.message_rounded)),
+            SizedBox(width: 20,)
+          ],
           title: Text(
             ScreenTitle[_selectedIndex],
             style: Theme.of(context)

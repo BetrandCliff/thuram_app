@@ -1,3 +1,5 @@
+
+/*
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -72,5 +74,64 @@ class PushNotificationService {
     );
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+}
+*/
+
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+class PushNotificationService {
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  Future<void> initialize() async {
+    // Initialize local notifications
+    _initializeLocalNotifications();
+
+    // Request permission
+    await _firebaseMessaging.requestPermission(alert: true, badge: true, sound: true);
+
+    // Listen for messages in the foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _showNotification(message);
+    });
+
+    // Background message handler
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
+
+  static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    print("Background Message: ${message.messageId}");
+  }
+
+  // Show notification locally
+  Future<void> _showNotification(RemoteMessage message) async {
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'chat_messages',
+        'Chat Messages',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker',
+      ),
+    );
+
+    await _localNotificationsPlugin.show(
+      message.hashCode,
+      message.notification?.title,
+      message.notification?.body,
+      notificationDetails,
+    );
+  }
+
+  // Initialize local notifications
+  void _initializeLocalNotifications() {
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    );
+
+    _localNotificationsPlugin.initialize(initializationSettings);
   }
 }

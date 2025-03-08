@@ -96,6 +96,7 @@ import 'package:flutter/material.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/confersions.dart';
 import '../../../../../core/constants/asset-paths.dart';
 import '../../../../../core/constants/colors.dart';
+import '../../../../../util/mediaviewer.dart';
 import '../../../../../util/next-screen.dart';
 import '../../../../../util/video-player.dart';
 import '../../../../../util/widthandheight.dart';
@@ -397,22 +398,23 @@ class ClubsAndPost extends StatelessWidget {
                                   style: Theme.of(context).textTheme.displayMedium,
                                 ),
                                 const SizedBox(height: 10),
-                            if (mediaUrl != null && mediaUrl.isNotEmpty)
-                          Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: post['type'] == 'video'
-                          ? VideoPlayerWidget(mediaPath: mediaUrl)
-                          : ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: CachedNetworkImage(
-                          imageUrl: mediaUrl,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => Center(child: Text("Image failed to load")),
-                        ),
-                      ),
-                    ),
+                                MediaViewer(mediaPath: mediaUrl??"",),
+                    //         if (mediaUrl != null && mediaUrl.isNotEmpty)
+                    //       Padding(
+                    //   padding: const EdgeInsets.symmetric(vertical: 10),
+                    //   child: post['type'] == 'video'
+                    //       ? VideoPlayerWidget(mediaPath: mediaUrl)
+                    //       : ClipRRect(
+                    //     borderRadius: BorderRadius.circular(8.0),
+                    //     child: CachedNetworkImage(
+                    //       imageUrl: mediaUrl,
+                    //       width: double.infinity,
+                    //       fit: BoxFit.cover,
+                    //       placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+                    //       errorWidget: (context, url, error) => Center(child: Text("Image failed to load")),
+                    //     ),
+                    //   ),
+                    // ),
 
                     const SizedBox(height: 20),
                               ],

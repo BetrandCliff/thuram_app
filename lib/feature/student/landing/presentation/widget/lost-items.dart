@@ -176,6 +176,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:thuram_app/feature/student/landing/presentation/widget/confersions.dart';
 import '../../../../../core/constants/asset-paths.dart';
+import '../../../../../util/mediaviewer.dart';
 import '../../../../../util/next-screen.dart';
 import '../../../../../util/video-player.dart';
 import '../pages/profile.dart';
@@ -306,32 +307,33 @@ class MissingItems extends StatelessWidget {
                                   post['message'],
                                   style: Theme.of(context).textTheme.displayMedium,
                                 ),
-                                Text("Path $mediaPath"),
+
                                 const SizedBox(height: 20),
-                                if (mediaPath != null && mediaPath.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
-                                    child: mediaPath.startsWith('http')
-                                        ? mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
-                                        ? SizedBox(
-                                      width: double.infinity,
-                                      height: 200,
-                                      child: VideoPlayerWidget(mediaPath: mediaPath),
-                                    )
-                                        : ClipRRect(
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      child: Image.network(
-                                        mediaPath,
-                                        width: double.infinity,
-                                        height: 200,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Center(child: Text("Image failed to load"));
-                                        },
-                                      ),
-                                    )
-                                        : const SizedBox(), // No image if mediaPath is invalid
-                                  ),
+                                MediaViewer(mediaPath: mediaPath??"",),
+                                // if (mediaPath != null && mediaPath.isNotEmpty)
+                                //   Padding(
+                                //     padding: const EdgeInsets.symmetric(vertical: 10),
+                                //     child: mediaPath.startsWith('http')
+                                //         ? mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
+                                //         ? SizedBox(
+                                //       width: double.infinity,
+                                //       // height: 200,
+                                //       child: VideoPlayerWidget(mediaPath: mediaPath),
+                                //     )
+                                //         : ClipRRect(
+                                //       borderRadius: BorderRadius.circular(8.0),
+                                //       child: Image.network(
+                                //         mediaPath,
+                                //         width: double.infinity,
+                                //         // height: 200,
+                                //         fit: BoxFit.cover,
+                                //         errorBuilder: (context, error, stackTrace) {
+                                //           return const Center(child: Text("Image failed to load"));
+                                //         },
+                                //       ),
+                                //     )
+                                //         : const SizedBox(), // No image if mediaPath is invalid
+                                //   ),
                               ],
                             ),
                           ),

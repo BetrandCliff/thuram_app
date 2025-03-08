@@ -9,6 +9,7 @@ import 'package:thuram_app/util/next-screen.dart';
 
 import '../../../../../core/constants/values.dart';
 import '../../../../../util/custom-description-card.dart';
+import '../../../../chat/chatlist.dart';
 import '../../../../chat/gemini_chat.dart';
 import '../../../login/presentation/login.dart';
 import '../../../login/presentation/signup.dart';
@@ -63,6 +64,10 @@ class _LandingPageState extends State<LandingPage> {
               },
               icon: Icon(Icons.menu)),
           centerTitle: true,
+          actions: [
+            IconButton(onPressed: (){nextScreen(context, ChatListScreen());}, icon: Icon(Icons.message_rounded)),
+            SizedBox(width: 20,)
+          ],
           title: Image.asset(
             AppImages.logo,
             width: 25,

@@ -229,6 +229,25 @@ class CustomDescriptionCard extends StatelessWidget {
   }
 }
 
+  Future<Map<String, dynamic>?> fetchUserCourse() async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid; // Dynamically get user ID
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();  // Use userId instead of hardcoded 'userId123'
+
+      if (userDoc.exists) {
+        return userDoc.data() as Map<String, dynamic>;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+      return null;
+    }
+  }
+
 @override
 Widget build(BuildContext context) {
   return Scaffold(
@@ -246,6 +265,8 @@ Widget build(BuildContext context) {
         // Get the number of followers and following from the data
         int followersCount = (userData["followers"] as List<dynamic>?)?.length ?? 0;
         int followingCount = (userData["following"] as List<dynamic>?)?.length ?? 0;
+        int postsCount = (userData["following"] as List<dynamic>?)?.length ?? 0;
+        int courseCount = (userData["course"] as List<dynamic>?)?.length ?? 0;
 
         return SingleChildScrollView(
           child: ConstrainedBox(
@@ -360,10 +381,10 @@ Widget build(BuildContext context) {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _ActivityCard(
-                            "Posts", userData["posts"]?.toString() ?? "0"),
-                        _ActivityCard("Courses",
-                            userData["courses"]?.toString() ?? "0"),
+                        // _ActivityCard(
+                        //     "Posts", userData["posts"]?.toString() ?? "0"),
+                        // _ActivityCard("Courses",
+                        //     userData["courses"]?.toString() ?? "0"),
                         _ActivityCard("Followers", followersCount.toString()),
                         _ActivityCard("Following", followingCount.toString()),
                       ],
@@ -394,24 +415,24 @@ Widget build(BuildContext context) {
                     ),
                     const SizedBox(height: 26), // Spacing
                     // Skills Section
-                    Text(
-                      "Skills:",
-                      style:
-                          Theme.of(context).textTheme.displayMedium!.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8.0,
-                      runSpacing: 4.0,
-                      children: userData["skills"] != null
-                          ? (userData["skills"] as List<dynamic>)
-                              .map((skill) => Chip(label: Text(skill)))
-                              .toList()
-                          : [const Chip(label: Text("No skills listed"))],
-                    ),
+                    // Text(
+                    //   "Skills:",
+                    //   style:
+                    //       Theme.of(context).textTheme.displayMedium!.copyWith(
+                    //             fontWeight: FontWeight.bold,
+                    //             fontSize: 16,
+                    //           ),
+                    // ),
+                    // const SizedBox(height: 8),
+                    // Wrap(
+                    //   spacing: 8.0,
+                    //   runSpacing: 4.0,
+                    //   children: userData["skills"] != null
+                    //       ? (userData["skills"] as List<dynamic>)
+                    //           .map((skill) => Chip(label: Text(skill)))
+                    //           .toList()
+                    //       : [const Chip(label: Text("No skills listed"))],
+                    // ),
                   ],
                 ),
               ),

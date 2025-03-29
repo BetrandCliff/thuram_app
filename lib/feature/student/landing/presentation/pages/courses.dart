@@ -333,6 +333,7 @@ class CourseItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("EACHE ${course.id}");
     return GestureDetector(
       onTap: () {
         isStudent

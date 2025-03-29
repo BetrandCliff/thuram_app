@@ -7,7 +7,7 @@ class UserModel {
   final List<String> lostItems;
   final List<String> following;
   final List<String> followers;
-  // final List<String> courses;
+  final String profilePic;
 
   UserModel(
       {required this.email,
@@ -17,7 +17,7 @@ class UserModel {
       required this.role,
       required this.lostItems,
       required this.followers,
-      // required this.courses,
+      required this.profilePic,
       required this.following});
 
   // Convert UserModel to Firestore data
@@ -30,7 +30,7 @@ class UserModel {
       'lostItems': lostItems,
       'follower': followers,
       'following': following,
-      // "courses": courses,
+      "profilePic": profilePic,
       "role":role
     };
   }
@@ -45,7 +45,7 @@ class UserModel {
       lostItems: List<String>.from(map['lostItems']),
       followers: List<String>.from(map['follower']),
       following: List<String>.from(map['following']),
-      // courses: List<String>.from(map['courses']),
+      profilePic:map['profilePic'],
       role: map['role']
     );
   }

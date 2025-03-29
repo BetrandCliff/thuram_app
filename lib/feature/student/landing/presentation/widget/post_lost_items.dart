@@ -79,7 +79,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart' as http;
 
 import '../../../../../core/constants/constants.dart';
-
 class PostLostFoundScreen extends StatefulWidget {
   const PostLostFoundScreen({Key? key}) : super(key: key);
 
@@ -93,9 +92,7 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
   final ImagePicker _picker = ImagePicker();
 
   File? _media;
-  String? _thumbnailPath;
   bool _isUploading = false;
-  // final String fileURL = "YOUR_API_UPLOAD_URL"; // Replace with actual API URL
 
   @override
   void dispose() {
@@ -108,7 +105,6 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
     if (pickedFile != null) {
       setState(() {
         _media = File(pickedFile.path);
-        _thumbnailPath = null;
       });
     }
   }
@@ -118,26 +114,9 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
     if (pickedFile != null) {
       setState(() {
         _media = File(pickedFile.path);
-        // _generateThumbnail(pickedFile.path);
       });
     }
   }
-
-  // Future<void> _generateThumbnail(String videoPath) async {
-  //   final String? thumbnail = await VideoThumbnail.thumbnailFile(
-  //     video: videoPath,
-  //     thumbnailPath: (await getTemporaryDirectory()).path,
-  //     imageFormat: ImageFormat.JPEG,
-  //     maxWidth: 200,
-  //     quality: 75,
-  //   );
-  //
-  //   if (thumbnail != null) {
-  //     setState(() {
-  //       _thumbnailPath = thumbnail;
-  //     });
-  //   }
-  // }
 
   Future<String?> _uploadMedia() async {
     if (_media == null) return null;
@@ -152,9 +131,9 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
 
       var response = await request.send();
       if (response.statusCode == 201) {
-        String responseBody =  await response.stream.bytesToString(); // Server returns file URL
+        String responseBody = await response.stream.bytesToString(); // Server returns file URL
         var jsonResponse = jsonDecode(responseBody);
-        return jsonResponse['url'];// Expecting the file URL from API
+        return jsonResponse['url']; // Expecting the file URL from API
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to upload media"), backgroundColor: Colors.red),
@@ -228,8 +207,6 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
   Widget _mediaPreview() {
     if (_media == null) {
       return Center(child: Text('Tap to select media'));
-    } else if (_thumbnailPath != null) {
-      return Image.file(File(_thumbnailPath!), fit: BoxFit.cover);
     } else if (_media!.path.endsWith('.mp4')) {
       return Icon(Icons.video_camera_front, size: 50, color: Colors.grey);
     } else {
@@ -282,3 +259,4 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
     );
   }
 }
+

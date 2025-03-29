@@ -299,6 +299,8 @@
 // // }
 
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -306,8 +308,9 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../../../core/constants/constants.dart';
 import '../../../../admin/presentations/database/db.dart';
-
+import 'package:http/http.dart' as http;
 class UploadCourseContent extends StatefulWidget {
   final String courseId; // Course ID to update
   const UploadCourseContent({Key? key, required this.courseId}) : super(key: key);
@@ -323,6 +326,7 @@ class _UploadCourseContentState extends State<UploadCourseContent> {
   String? _mediaType; // Track type (image, video, pdf)
   final TextEditingController _lessonTitleController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  String? mediaPath;
 
   /// Pick an image
   Future<void> _pickImage() async {
@@ -375,11 +379,31 @@ class _UploadCourseContentState extends State<UploadCourseContent> {
         return;
       }
 
-      final mediaPath = _media!.path;
+      // final mediaPath = _media!.path;
 
       try {
         // 1️⃣ Store media in SQLite and get media ID
-        int mediaId = await _dbHelper.insertMedia('coursedetails', mediaPath, _mediaType!);
+        // int mediaId = await _dbHelper.insertMedia('coursedetails', mediaPath, _mediaType!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Uploading File ...'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        var request = await http.MultipartRequest('POST', Uri.parse(fileURL.trim()));
+        request.files.add(await http.MultipartFile.fromPath('file', _media!.path));
+        var response = await request.send();
+
+        if (response.statusCode == 201) {
+          String responseBody = await response.stream.bytesToString();
+          var jsonResponse = jsonDecode(responseBody);
+          mediaPath = jsonResponse['url'];
+        } else {
+          print("Upload failed with status: ${response.statusCode}");
+          return;
+        }
+
+
 
         // 2️⃣ Fetch existing content from Firestore
         DocumentSnapshot courseDoc = await FirebaseFirestore.instance
@@ -391,7 +415,7 @@ class _UploadCourseContentState extends State<UploadCourseContent> {
 
         // 3️⃣ Append new object { mediaId, lessonTitle, mediaType } to Firestore
         content.add({
-          "mediaId": mediaId,
+          "mediaPath": mediaPath,
           "lessonTitle": lessonTitle,
           "mediaType": _mediaType,
         });

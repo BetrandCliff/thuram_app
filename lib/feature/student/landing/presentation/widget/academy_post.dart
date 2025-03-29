@@ -338,6 +338,7 @@
 
 
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -348,12 +349,190 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../../../../../core/constants/constants.dart';
+import '../../../../admin/presentations/database/db.dart';
+
+
 
 class AcademyPostScreen extends StatefulWidget {
   @override
   _AcademyPostScreenState createState() => _AcademyPostScreenState();
 }
 
+class _AcademyPostScreenState extends State<AcademyPostScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  bool _isLoading = false;
+  File? _media;
+  String? _thumbnailPath;
+  VideoPlayerController? _videoPlayerController;
+  final ImagePicker _picker = ImagePicker();
+  final String fileURL = "https://todo-app-backend-h8w0.onrender.com/upload/file";
+
+  Future<void> _pickMedia() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _media = File(pickedFile.path);
+        _thumbnailPath = null;
+        _videoPlayerController?.dispose();
+        _videoPlayerController = null;
+      });
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _media = File(pickedFile.path);
+        _initializeVideoPlayer(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _initializeVideoPlayer(String videoPath) async {
+    final controller = VideoPlayerController.file(File(videoPath));
+    await controller.initialize();
+    setState(() {
+      _videoPlayerController = controller;
+    });
+  }
+
+  Future<void> _createPost() async {
+    if (_messageController.text.isEmpty && _media == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You need to be logged in to create a post.')),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      String? mediaPath;
+      String mediaType = _media!.path.endsWith(".mp4") ? "video" : "image";
+
+      if (_media != null) {
+        try {
+          var request = http.MultipartRequest('POST', Uri.parse(fileURL.trim()));
+          request.files.add(await http.MultipartFile.fromPath('file', _media!.path));
+          var response = await request.send();
+
+          if (response.statusCode == 201) {
+            String responseBody = await response.stream.bytesToString();
+            var jsonResponse = jsonDecode(responseBody);
+            mediaPath = jsonResponse['url'];
+          } else {
+            print("Upload failed with status: \${response.statusCode}");
+            return;
+          }
+        } catch (e) {
+          print("Upload error: \$e");
+          return;
+        }
+      }
+
+      await FirebaseFirestore.instance.collection('academy').add({
+        'name': user.displayName ?? 'Anonymous',
+        'profilePic': user.photoURL ?? '',
+        'message': _messageController.text,
+        'likes': [],
+        'comments': [],
+        'userId': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'mediaPath': mediaPath ?? '',
+        'thumbnailPath': _thumbnailPath ?? '',
+      });
+
+      _messageController.clear();
+      setState(() {
+        _media = null;
+        _thumbnailPath = null;
+        _videoPlayerController?.dispose();
+        _videoPlayerController = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Post created successfully!')),
+      );
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create post: \$e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Create Post')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  ElevatedButton(onPressed: _pickMedia, child: Text('Pick Image')),
+                  SizedBox(width: 10),
+                  ElevatedButton(onPressed: _pickVideo, child: Text('Pick Video')),
+                ],
+              ),
+              if (_media != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: SizedBox(
+                    height: 200,
+                    child: _videoPlayerController != null
+                        ? AspectRatio(
+                      aspectRatio: _videoPlayerController!.value.aspectRatio,
+                      child: VideoPlayer(_videoPlayerController!),
+                    )
+                        : Image.file(_media!),
+                  ),
+                ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _messageController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintStyle: Theme.of(context).textTheme.bodyMedium,
+                  hintText: 'What’s on your mind?',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 20),
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                onPressed: _createPost,
+                child: Text('Post'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+/*
 class _AcademyPostScreenState extends State<AcademyPostScreen> {
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = false;
@@ -537,3 +716,6 @@ class _AcademyPostScreenState extends State<AcademyPostScreen> {
     super.dispose();
   }
 }
+
+ */
+

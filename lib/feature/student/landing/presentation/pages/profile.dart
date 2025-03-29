@@ -30,7 +30,7 @@ class _ProfilePageState extends State<ProfilePage>
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool isLoading = true;
   String profileImage = "";
-  int postsCount = 0;
+  // int postsCount = 0;
 
   void _followUser(String userId) async {
     try {
@@ -137,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage>
             final userData = snapshot.data!;
             int followersCount = (userData["followers"] as List<dynamic>?)?.length ?? 0;
             int followingCount = (userData["following"] as List<dynamic>?)?.length ?? 0;
-
+            int postsCount = (userData["lostItems"] as List<dynamic>?)?.length ?? 0;
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -182,7 +182,7 @@ class _ProfilePageState extends State<ProfilePage>
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         CustomButton(
-                          text: "Follow",
+                          text: _headerText,
                           onTap: () => _followUser(widget.userId),
                           width: 150,
                           isColorBlack: true,

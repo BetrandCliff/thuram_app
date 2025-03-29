@@ -1,180 +1,16 @@
-import 'dart:io';
-
-import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import 'package:video_player/video_player.dart';
-
-// class CourseContentDisplay extends StatefulWidget {
-//   final String courseId; // Course ID for fetching content
-//   final String courseName; // Course name to display
-//   const CourseContentDisplay(
-//       {Key? key, required this.courseId, required this.courseName})
-//       : super(key: key);
-
-//   @override
-//   _CourseContentDisplayState createState() => _CourseContentDisplayState();
-// }
-
-// class _CourseContentDisplayState extends State<CourseContentDisplay> {
-//   List<Map<String, dynamic>> _content =
-//       []; // List to store lesson titles and media IDs
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _fetchCourseContent();
-//   }
-
-//   /// Fetch course content from Firestore
-//   Future<void> _fetchCourseContent() async {
-//     try {
-//       print("THE COURSE ID IS ${widget.courseName}");
-//       // Fetch the course document from Firestore using course ID
-//       final DocumentSnapshot courseSnapshot = await FirebaseFirestore.instance
-//           .collection('courses')
-//           .doc(widget.courseId)
-//           .get();
-
-//       if (courseSnapshot.exists) {
-//         var courseData = courseSnapshot.data() as Map<String, dynamic>;
-//         setState(() {
-//           _content =
-//               List<Map<String, dynamic>>.from(courseData['content'] ?? []);
-//         });
-//       } else {
-//         if (mounted) {
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(content: Text('Course not found')),
-//           );
-//         }
-//       }
-//     } catch (e) {
-//       if (mounted) {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text('Failed to fetch course content')),
-//         );
-//       }
-//     }
-//   }
-
-//   /// Fetch media path from SQLite using media ID
-//   Future<String?> _fetchMediaPath(int mediaId) async {
-//     // TODO: Replace this with your actual SQLite query
-//     return "https://example.com/media/$mediaId"; // Placeholder URL
-//   }
-
-//   /// Display content with media and lesson title
-//   Widget _buildMediaItem(Map<String, dynamic> content) {
-//     final int mediaId = content['mediaId']; // Media ID stored in Firestore
-//     final String lessonTitle = content['lessonTitle'];
-
-//     return FutureBuilder<String?>(
-//       future: _fetchMediaPath(mediaId),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.waiting) {
-//           return Center(child: CircularProgressIndicator());
-//         }
-
-//         final String? mediaPath = snapshot.data;
-
-//         if (mediaPath == null) {
-//           return Text("Media not found");
-//         }
-
-//         return Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Text(
-//               lessonTitle,
-//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//             ),
-//             SizedBox(height: 8),
-//             if (mediaPath.endsWith('.jpg') || mediaPath.endsWith('.png'))
-//               Image.file(File(mediaPath), fit: BoxFit.cover, height: 200)
-//             else if (mediaPath.endsWith('.mp4'))
-//               _buildVideoPlayer(mediaPath),
-//             SizedBox(height: 16),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   /// Video player widget for video content
-//   Widget _buildVideoPlayer(String videoPath) {
-//     VideoPlayerController _controller =
-//         VideoPlayerController.network(videoPath);
-
-//     return FutureBuilder(
-//       future: _controller.initialize(),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.done) {
-//           return Column(
-//             children: [
-//               AspectRatio(
-//                 aspectRatio: _controller.value.aspectRatio,
-//                 child: VideoPlayer(_controller),
-//               ),
-//               IconButton(
-//                 icon: Icon(_controller.value.isPlaying
-//                     ? Icons.pause
-//                     : Icons.play_arrow),
-//                 onPressed: () {
-//                   setState(() {
-//                     if (_controller.value.isPlaying) {
-//                       _controller.pause();
-//                     } else {
-//                       _controller.play();
-//                     }
-//                   });
-//                 },
-//               ),
-//             ],
-//           );
-//         } else {
-//           return CircularProgressIndicator();
-//         }
-//       },
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Course: ${widget.courseId}')),
-//       body: _content.isEmpty
-//           ? Center(child: CircularProgressIndicator())
-//           : ListView.builder(
-//               itemCount: _content.length,
-//               itemBuilder: (context, index) {
-//                 return Padding(
-//                   padding: const EdgeInsets.all(8.0),
-//                   child: _buildMediaItem(_content[index]),
-//                 );
-//               },
-//             ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:video_player/video_player.dart';
+import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'dart:io';
 
-import '../../../../admin/presentations/database/db.dart';
-import '../../../../admin/presentations/model/course.dart';
+import 'package:thuram_app/util/mediaviewer.dart'; // For File handling if needed
+// You might need to add more imports like video_player or flutter_pdfview for media
 
 class CourseContentDisplay extends StatefulWidget {
-  final Course course;
-
-  const CourseContentDisplay(
-      {Key? key, required this.course, required String courseId})
-      : super(key: key);
+  final dynamic course; // Assuming you have a course object with course data
+  final String courseId;
+  const CourseContentDisplay({Key? key, required this.course, required this.courseId}) : super(key: key);
 
   @override
   _CourseContentDisplayState createState() => _CourseContentDisplayState();
@@ -203,16 +39,16 @@ class _CourseContentDisplayState extends State<CourseContentDisplay> {
       print("Fetching content for course: ${widget.course.courseName}");
       final DocumentSnapshot courseSnapshot = await FirebaseFirestore.instance
           .collection('courses')
-          .doc(widget.course.id)
+          .doc(widget.courseId)
           .get();
 
       if (courseSnapshot.exists) {
         var courseData = courseSnapshot.data() as Map<String, dynamic>;
         if (_isMounted) {
           setState(() {
-            _content =
-                List<Map<String, dynamic>>.from(courseData['content'] ?? []);
+            _content = List<Map<String, dynamic>>.from(courseData['content'] ?? []);
           });
+          print("COURSE DETAILS FETCHED");
         }
       } else {
         if (_isMounted) {
@@ -230,60 +66,30 @@ class _CourseContentDisplayState extends State<CourseContentDisplay> {
     }
   }
 
-  /// Fetch media path from SQLite using media ID
-  Future<String?> _fetchMediaPath(int mediaId) async {
-     final db = await DatabaseHelper().database;
-    final List<Map<String, dynamic>> mediaRecords = await db.query(
-      'confessions', // Assuming you have a table for confessions
-      where: 'id = ?',
-      whereArgs: [mediaId],
-    );
-    if (mediaRecords.isNotEmpty) {
-      return mediaRecords.first['mediaPath'] as String?;
-    }
-    return null; 
-  }
-
   /// Display content with media and lesson title
   Widget _buildMediaItem(Map<String, dynamic> content) {
-    final int mediaId = content['mediaId']; // Media ID stored in Firestore
-    final String lessonTitle = content['lessonTitle'];
+    final String lessonTitle = content['lessonTitle']??"";
+    final String mediaPath = content['mediaPath']??""; // Assuming mediaPath is directly available
 
-    return FutureBuilder<String?>(
-      future: _fetchMediaPath(mediaId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        final String? mediaPath = snapshot.data;
-
-        if (mediaPath == null) {
-          return Text("Media not found");
-        }
-        print("MEDIA PATH $mediaPath");
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              lessonTitle,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            _buildMediaWidget(mediaPath),
-            SizedBox(height: 16),
-          ],
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "${lessonTitle??""}",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 8),
+        _buildMediaWidget(mediaPath),
+        SizedBox(height: 16),
+      ],
     );
   }
 
   /// Determines media type and displays it accordingly
   Widget _buildMediaWidget(String mediaPath) {
-    if (mediaPath.endsWith('.jpg') || mediaPath.endsWith('.png')) {
-      return Image.file(File(mediaPath), fit: BoxFit.cover, height: 200);
-    } else if (mediaPath.endsWith('.mp4')) {
-      return _buildVideoPlayer(mediaPath);
+    if ( mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')|| mediaPath.endsWith('.jpg')|| mediaPath.endsWith('.png')) {
+      return MediaViewer(mediaPath: mediaPath,);
+
     } else if (mediaPath.endsWith('.pdf')) {
       return _buildPdfViewer(mediaPath);
     } else {
@@ -291,73 +97,49 @@ class _CourseContentDisplayState extends State<CourseContentDisplay> {
     }
   }
 
-  /// Video player widget for video content
-  Widget _buildVideoPlayer(String videoPath) {
-    VideoPlayerController _controller =
-        VideoPlayerController.network(videoPath);
 
-    return FutureBuilder(
-      future: _controller.initialize(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return Column(
-            children: [
-              AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              ),
-              IconButton(
-                icon: Icon(_controller.value.isPlaying
-                    ? Icons.pause
-                    : Icons.play_arrow),
-                onPressed: () {
-                  setState(() {
-                    if (_controller.value.isPlaying) {
-                      _controller.pause();
-                    } else {
-                      _controller.play();
-                    }
-                  });
-                },
-              ),
-            ],
-          );
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
-    );
-  }
-
-  /// PDF viewer widget for displaying PDFs
-  Widget _buildPdfViewer(String pdfPath) {
-    return SizedBox(
-      height: 300,
-      child: PDFView(
-        filePath: pdfPath,
-        enableSwipe: true,
-        swipeHorizontal: true,
-        autoSpacing: false,
-        pageFling: true,
+  Widget _buildPdfViewer(String mediaPath) {
+    print("THE MEDIA PDF LINK IS $mediaPath");
+    return Container(
+      height: 400,
+      color: Colors.grey[300],
+      child: PDF().fromUrl(
+        // "https://www.hq.nasa.gov/alsj/a17/A17_FlightPlan.pdf",
+        mediaPath, // URL of the PDF file
+        errorWidget: (error) => Center(child: Text("Failed to load PDF: $error")),
+        placeholder: (progress) => Center(child: CircularProgressIndicator()),
       ),
     );
   }
+  /// Example of how to build a PDF viewer
+  // Widget _buildPdfViewer(String mediaPath) {
+  //   return Container(
+  //     height: 400, // Set appropriate height
+  //     color: Colors.grey[300],
+  //     child: PDFView(
+  //       filePath: mediaPath, // Path to the PDF file (could be a URL or local file)
+  //       onPageError: (page, error) {
+  //         // Handle any errors
+  //         print("Error on page $page: $error");
+  //       },
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Course: ${widget.course.courseName}')),
-      body: _content.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _content.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: _buildMediaItem(_content[index]),
-                );
-              },
-            ),
+      appBar: AppBar(title: Text(widget.course.courseName)),
+      body: ListView.builder(
+        itemCount: _content.length,
+        itemBuilder: (context, index) {
+          return Container(
+            child: Card(
+                elevation: 3,
+                child: _buildMediaItem(_content[index])),
+          );
+        },
+      ),
     );
   }
 }

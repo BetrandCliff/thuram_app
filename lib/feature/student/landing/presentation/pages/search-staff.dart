@@ -136,7 +136,7 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
                     //     : null,
                   ),
                   title: Text(item['username'] ?? 'No Name'),
-                  subtitle: Text(item['email'] ?? 'No Email'),
+                  // subtitle: Text(item['email'] ?? 'No Email'),
                   trailing: collectionName == 'users'
                       ? ElevatedButton(
                           onPressed: () {

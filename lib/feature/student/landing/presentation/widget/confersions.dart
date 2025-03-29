@@ -458,14 +458,39 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
 
 
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:video_player/video_player.dart';
+
+
+import 'dart:convert';
+
 
 class Confessions extends StatelessWidget {
   const Confessions({super.key});
+
+  // Cache confessions in the local database
+  Future<void> cacheConfessions(List<QueryDocumentSnapshot> confessions, List<Map<String, dynamic>> cachedConfessions) async {
+    final db = DatabaseHelper();
+    Set<String> cachedIds = cachedConfessions.map((e) => e['id'] as String??"").toSet();
+
+    for (var confession in confessions) {
+      if (!cachedIds.contains(confession.id)) {
+        await db.insertPost('confessions', {
+          'id': confession.id??"",
+          'message': confession['message'] ?? '',
+          'mediaPath': confession['mediaUrl'] is Map<String, dynamic>
+              ? jsonEncode(confession['mediaUrl'])
+              : confession['mediaUrl'] ?? '',
+          'createdAt': confession['createdAt']?.toDate().toString() ?? '',
+          'userId': confession['userId'] ?? '',
+        });
+      }
+    }
+  }
+
+  // Fetch cached confessions
+  Future<List<Map<String, dynamic>>> getCachedConfessions() async {
+    final db = DatabaseHelper();
+    return await db.getCachedPosts('confessions');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -490,7 +515,7 @@ class Confessions extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     "Create Confession",
-                    style: Theme.of(context).textTheme.displaySmall!.copyWith(
+                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -501,89 +526,40 @@ class Confessions extends StatelessWidget {
             ],
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('confessions')
-                  .where('status', isEqualTo: 'approved')
-                  .orderBy('createdAt', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: getCachedConfessions(),
+              builder: (context, cacheSnapshot) {
+                if (cacheSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (snapshot.hasError || !snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No approved confessions available.'));
+
+                if (cacheSnapshot.hasError) {
+                  return const Center(child: Text('Something went wrong!'));
                 }
 
-                var confessions = snapshot.data!.docs;
+                List<Map<String, dynamic>> cachedConfessions = cacheSnapshot.data ?? [];
 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: confessions.length,
-                  itemBuilder: (context, index) {
-                    var confession = confessions[index];
-                    String? mediaUrl = confession['mediaUrl']; // Fetch media URL directly from Firestore
-                    String? mediaType = confession['mediaType']; // Image or Video
-                    String? postOwnerId = confession['userId'];
+                return StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('confessions')
+                      .where('status', isEqualTo: 'approved')
+                      .orderBy('createdAt', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting && cachedConfessions.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                    return Dismissible(
-                      key: Key(confession.id),
-                      direction: currentUserId == postOwnerId ? DismissDirection.endToStart : DismissDirection.none,
-                      onDismissed: (direction) async {
-                        await FirebaseFirestore.instance.collection('confessions').doc(confession.id).delete();
-                      },
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.only(right: 16),
-                        child: Icon(Icons.delete, color: Colors.white),
-                      ),
-                      child: Card(
-                        elevation: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage: NetworkImage(confession['profilePic'] ?? 'assets/profile_placeholder.png'),
-                                ),
-                                title: Text(confession['userName'] ?? 'Anonymous'),
-                                subtitle: Text(confession['createdAt'].toDate().toString()),
-                              ),
-                              Text(
-                                confession['message'] ?? "No message available",
-                                style: Theme.of(context).textTheme.displayMedium,
-                              ),
-                              const SizedBox(height: 10),
-                              MediaViewer(mediaPath: mediaUrl??"",),
-                              // if (mediaUrl != null && mediaUrl.isNotEmpty)
-                              //   Padding(
-                              //     padding: const EdgeInsets.symmetric(vertical: 10),
-                              //     child: mediaType == 'video'
-                              //         ? VideoPlayerWidget( mediaPath: mediaUrl,)
-                              //         : ClipRRect(
-                              //       borderRadius: BorderRadius.circular(8.0),
-                              //       child: Image.network(
-                              //         mediaUrl,
-                              //         width: double.infinity,
-                              //         height: 200,
-                              //         fit: BoxFit.cover,
-                              //         errorBuilder: (context, error, stackTrace) {
-                              //           return const Center(child: Text("Image failed to load"));
-                              //         },
-                              //       ),
-                              //     ),
-                              //   ),
-                              const SizedBox(height: 20),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
+                    if (snapshot.hasError) {
+                      return const Center(child: Text('Something went wrong!'));
+                    }
+
+                    if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                      cacheConfessions(snapshot.data!.docs, cachedConfessions);
+                      return _buildConfessionList(snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList(), currentUserId);
+                    }
+
+                    return _buildConfessionList(cachedConfessions, currentUserId);
                   },
                 );
               },
@@ -593,7 +569,65 @@ class Confessions extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildConfessionList(List<Map<String, dynamic>> confessions, String? currentUserId) {
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: confessions.length,
+      itemBuilder: (context, index) {
+        var confession = confessions[index];
+        String? mediaPath = confession['mediaPath']??"";
+        String? postOwnerId = confession['userId']??"";
+
+        return Dismissible(
+          key: Key(confession['id']??""),
+          direction: currentUserId == postOwnerId
+              ? DismissDirection.endToStart
+              : DismissDirection.none,
+          onDismissed: (direction) async {
+            await FirebaseFirestore.instance.collection('confessions').doc(confession['id']).delete();
+            await DatabaseHelper().deletePost('confessions', confession['id']);
+          },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 16),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          child: Card(
+            elevation: 3,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      radius: 20,
+                      backgroundImage: NetworkImage(confession['profilePic'] ?? 'assets/profile_placeholder.png'),
+                    ),
+                    title: const Text('Anonymous'),
+                    subtitle: Text(confession['createdAt'].toString() ?? ""),
+                  ),
+                  Text(
+                    confession['message'] ?? "No message available",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 10),
+                  if (mediaPath != null && mediaPath.isNotEmpty) MediaViewer(mediaPath: mediaPath),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
+
 
 
 

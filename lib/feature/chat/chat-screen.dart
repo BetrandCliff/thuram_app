@@ -452,6 +452,7 @@ class _ChatScreenState extends State<ChatScreen> {
 //
 
 
+/*
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -628,6 +629,229 @@ class _ChatScreenState extends State<ChatScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+*/
+
+
+
+import 'package:flutter/material.dart';
+import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+class ChatScreen extends StatefulWidget {
+  final String receiverId; // The user ID of the person to chat with
+  final String userName;
+
+  const ChatScreen({Key? key, required this.receiverId, required this.userName})
+      : super(key: key);
+
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  late String currentUserId;
+  String? receiverFCMToken;
+  List<ChatMessage> messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    currentUserId = _auth.currentUser!.uid;
+    _initializeNotifications();
+    _fetchReceiverFCMToken();
+    _loadMessages();
+  }
+
+  // Initialize local notifications
+  void _initializeNotifications() {
+    const InitializationSettings initializationSettings =
+    InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    );
+    _localNotificationsPlugin.initialize(initializationSettings);
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _showNotification(message);
+    });
+  }
+
+  // Fetch recipient's FCM token
+  void _fetchReceiverFCMToken() async {
+    DocumentSnapshot userDoc =
+    await _firestore.collection('users').doc(widget.receiverId).get();
+    setState(() {
+      receiverFCMToken = userDoc['fcmToken'];
+    });
+  }
+
+  // Load messages from Firestore
+  void _loadMessages() {
+    String chatId = getChatId();
+
+    _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      setState(() {
+        messages = snapshot.docs.map((doc) {
+          return ChatMessage(
+            text: doc['text'],
+            user: ChatUser(
+              id: doc['senderId'],
+              firstName: doc['senderId'] == currentUserId
+                  ? 'You'
+                  : widget.userName,
+              profileImage: 'https://example.com/default_avatar.png', // Placeholder
+            ),
+            createdAt: (doc['timestamp'] as Timestamp).toDate(), // Convert Firestore Timestamp to DateTime
+            customProperties: {'status': doc['status'] ?? 'sent'}, // Message status (sent, delivered, read)
+          );
+        }).toList();
+      });
+    });
+  }
+
+  // Generate a chat ID using both user IDs (ensures unique chat)
+  String getChatId() {
+    List<String> ids = [currentUserId, widget.receiverId];
+    ids.sort(); // Ensure consistent order
+    return ids.join("_");
+  }
+
+  // Send a message & trigger push notification
+  void _sendMessage(ChatMessage message) async {
+    if (message.text.isEmpty || currentUserId == null) return;
+
+    String chatId = getChatId();
+
+    // Send message to Firestore for both users
+    await _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .add({
+      'senderId': currentUserId,
+      'receiverId': widget.receiverId,
+      'text': message.text,
+      'timestamp': FieldValue.serverTimestamp(), // Save timestamp as Firestore server timestamp
+      'status': 'sent', // Default status when sent
+    });
+
+    // Send push notification
+    _sendPushNotification(message.text);
+  }
+
+  // Send push notification
+  void _sendPushNotification(String message) async {
+    if (receiverFCMToken == null) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'token': receiverFCMToken,
+        'title': "New message from ${_auth.currentUser?.displayName ?? 'Someone'}",
+        'body': message,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print("Error sending notification: $e");
+    }
+  }
+
+  // Show notification locally
+  Future<void> _showNotification(RemoteMessage message) async {
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'chat_messages',
+        'Chat Messages',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker',
+      ),
+    );
+
+    await _localNotificationsPlugin.show(
+      message.hashCode,
+      message.notification?.title,
+      message.notification?.body,
+      notificationDetails,
+    );
+  }
+
+  // Get message status (✓, ✓✓, ✓✓ in blue)
+  String _getMessageStatus(String status) {
+    if (status == 'sent') {
+      return '✓'; // Sent
+    } else if (status == 'delivered') {
+      return '✓✓'; // Delivered
+    } else if (status == 'read') {
+      return '✓✓'; // Read (blue)
+    }
+    return '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.userName)),
+      body: DashChat(
+        currentUser: ChatUser(
+          id: currentUserId,
+          firstName: _auth.currentUser?.displayName ?? 'User',
+          profileImage: _auth.currentUser?.photoURL??"https://example.com/default_avatar.png", // Placeholder
+        ),
+        messages: messages,
+        onSend: _sendMessage,
+        inputOptions: InputOptions(
+          inputDecoration: InputDecoration(
+            hintText: 'Type a message...',
+            hintStyle: Theme.of(context).textTheme.displaySmall,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+        messageOptions: MessageOptions(
+          showTime: true, // Show message timestamps
+          messageTextBuilder: (message, previousMessage, nextMessage) {
+            String statusIcon = _getMessageStatus(message.customProperties?['status'] ?? 'sent');
+
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    message.text,
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                ),
+                const SizedBox(width: 4), // Small spacing
+                Text(
+                  statusIcon,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: statusIcon == '✓✓' ? Colors.grey : Colors.blue,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

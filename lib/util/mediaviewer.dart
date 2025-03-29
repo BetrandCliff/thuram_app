@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -19,16 +20,28 @@ class MediaViewer extends StatelessWidget {
             color: Colors.black.withOpacity(0.9),
             alignment: Alignment.center,
             child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
-                ? VideoPlayerWidget(mediaPath: mediaPath)
-                : Image.network(
-              mediaPath,
+                ? VideoPlayerWidget(mediaPath: mediaPath):CachedNetworkImage(
+              imageUrl: mediaPath,
               width: double.infinity,
               height: double.infinity,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Center(child: Text("Image failed to load", style: TextStyle(color: Colors.white)));
-              },
+              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) => const Center(
+                child: Text(
+                  "Image failed to load",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ),
+            //     : Image.network(
+            //   mediaPath,
+            //   width: double.infinity,
+            //   height: double.infinity,
+            //   fit: BoxFit.contain,
+            //   errorBuilder: (context, error, stackTrace) {
+            //     return const Center(child: Text("Image failed to load", style: TextStyle(color: Colors.white)));
+            //   },
+            // ),
           ),
         );
       },

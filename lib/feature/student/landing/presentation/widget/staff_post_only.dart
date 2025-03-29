@@ -17,18 +17,18 @@ class PersonalClubsAndPost extends StatelessWidget {
   final bool isStudent;
   final String userId;
 
-  Future<String?> _getMediaPathFromDb(int mediaId) async {
-    final db = await DatabaseHelper().database;
-    final List<Map<String, dynamic>> mediaRecords = await db.query(
-      'club_posts',
-      where: 'id = ?',
-      whereArgs: [mediaId],
-    );
-    if (mediaRecords.isNotEmpty) {
-      return mediaRecords.first['mediaPath'] as String?;
-    }
-    return null;
-  }
+  // Future<String?> _getMediaPathFromDb(int mediaId) async {
+  //   final db = await DatabaseHelper().database;
+  //   final List<Map<String, dynamic>> mediaRecords = await db.query(
+  //     'club_posts',
+  //     where: 'id = ?',
+  //     whereArgs: [mediaId],
+  //   );
+  //   if (mediaRecords.isNotEmpty) {
+  //     return mediaRecords.first['mediaPath'] as String?;
+  //   }
+  //   return null;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,7 @@ class PersonalClubsAndPost extends StatelessWidget {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text('Something went wrong!'));
+                  return Center(child: Text('Bad Network'));
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -65,78 +65,80 @@ class PersonalClubsAndPost extends StatelessWidget {
                   itemCount: posts.length,
                   itemBuilder: (context, index) {
                     var post = posts[index];
-                    int mediaId = post['mediaId'] ?? 0;
-
-                    return FutureBuilder<String?>(
-                      future: _getMediaPathFromDb(mediaId),
-                      builder: (context, mediaSnapshot) {
-                        if (mediaSnapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-
-                        if (mediaSnapshot.hasError || !mediaSnapshot.hasData) {
-                          return Center(child: Text('Empty'));
-                        }
-
-                        String mediaPath = mediaSnapshot.data ?? "";
-
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 10),
-                          child: Card(
-                            elevation: 3,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ListTile(
-                                    contentPadding: EdgeInsets.all(0),
-                                    leading: CircleAvatar(
-                                      radius: 20,
-                                      backgroundImage: NetworkImage(
-                                        post['profilePic'] ?? AppImages.profile,
-                                      ),
-                                    ),
-                                    title: Text("${post['userName'] ?? "Anonymous"}"),
-                                    subtitle: Text(post['createdAt'].toDate().toString()),
+                    String mediaPath = post['mediaUrl'] ?? "";
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      child: Card(
+                        elevation: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                contentPadding: EdgeInsets.all(0),
+                                leading: CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: NetworkImage(
+                                    post['profilePic'] ?? AppImages.profile,
                                   ),
-                                  Text(
-                                    "${post['message']}",
-                                    style: Theme.of(context).textTheme.displayMedium,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  if (mediaPath.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
-                                      child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
-                                          ? Container(
-                                        width: double.infinity,
-                                        height: 200,
-                                        child: VideoPlayerWidget(mediaPath: mediaPath),
-                                      )
-                                          : ClipRRect(
-                                        borderRadius: BorderRadius.circular(8.0),
-                                        child: Image.file(
-                                          File(mediaPath),
-                                          width: double.infinity,
-                                          height: 200,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Center(
-                                              child: Text("Image failed to load"),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  const SizedBox(height: 20),
-                                ],
+                                ),
+                                title: Text("${post['userName'] ?? "Anonymous"}"),
+                                subtitle: Text(post['createdAt'].toDate().toString()),
                               ),
-                            ),
+                              Text(
+                                "${post['message']}",
+                                style: Theme.of(context).textTheme.displayMedium,
+                              ),
+                              const SizedBox(height: 10),
+                              if (mediaPath.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  child: mediaPath.endsWith('.mp4') || mediaPath.endsWith('.mov')
+                                      ? Container(
+                                    width: double.infinity,
+                                    height: 200,
+                                    child: VideoPlayerWidget(mediaPath: mediaPath),
+                                  )
+                                      : ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: Image.file(
+                                      File(mediaPath),
+                                      width: double.infinity,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Center(
+                                          child: Text("Image failed to load"),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 20),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     );
+
+
+                    // return FutureBuilder<String?>(
+                    //   future: _getMediaPathFromDb(mediaId),
+                    //   builder: (context, mediaSnapshot) {
+                    //     if (mediaSnapshot.connectionState == ConnectionState.waiting) {
+                    //       return Center(child: CircularProgressIndicator());
+                    //     }
+                    //
+                    //     if (mediaSnapshot.hasError || !mediaSnapshot.hasData) {
+                    //       return Center(child: Text('Empty'));
+                    //     }
+                    //
+                    //     String mediaPath = mediaSnapshot.data ?? "";
+                    //
+                    //
+                    //   },
+                    // );
                   },
                 );
               },

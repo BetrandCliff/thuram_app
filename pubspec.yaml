@@ -38,6 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_screenutil: ^5.9.3
   flutter_rating_bar:
+  intl:
   country_code_picker: ^3.2.0
   firebase_core: ^3.11.0
   fluttertoast:

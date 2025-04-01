@@ -461,7 +461,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
 
 import 'dart:convert';
-
+import 'package:intl/intl.dart';  // Import the intl package
 
 class Confessions extends StatelessWidget {
   const Confessions({super.key});
@@ -469,17 +469,21 @@ class Confessions extends StatelessWidget {
   // Cache confessions in the local database
   Future<void> cacheConfessions(List<QueryDocumentSnapshot> confessions, List<Map<String, dynamic>> cachedConfessions) async {
     final db = DatabaseHelper();
-    Set<String> cachedIds = cachedConfessions.map((e) => e['id'] as String??"").toSet();
+    Set<String> cachedIds = cachedConfessions.map((e) => e['id'] as String ?? "").toSet();
 
     for (var confession in confessions) {
       if (!cachedIds.contains(confession.id)) {
+        DateTime createdAt = confession['createdAt'] is Timestamp
+            ? (confession['createdAt'] as Timestamp).toDate()
+            : DateTime.parse(confession['createdAt'].toString()); // Handle conversion properly
+
         await db.insertPost('confessions', {
-          'id': confession.id??"",
+          'id': confession.id ?? "",
           'message': confession['message'] ?? '',
           'mediaPath': confession['mediaUrl'] is Map<String, dynamic>
               ? jsonEncode(confession['mediaUrl'])
               : confession['mediaUrl'] ?? '',
-          'createdAt': confession['createdAt']?.toDate().toString() ?? '',
+          'createdAt': createdAt.toString(),  // Store the formatted date string
           'userId': confession['userId'] ?? '',
         });
       }
@@ -490,6 +494,12 @@ class Confessions extends StatelessWidget {
   Future<List<Map<String, dynamic>>> getCachedConfessions() async {
     final db = DatabaseHelper();
     return await db.getCachedPosts('confessions');
+  }
+
+  // Format Timestamp to a readable date string
+  String formatTimestamp(Timestamp timestamp) {
+    final DateFormat formatter = DateFormat('dd MMM yyyy HH:mm'); // Adjust format as needed
+    return formatter.format(timestamp.toDate());
   }
 
   @override
@@ -526,7 +536,7 @@ class Confessions extends StatelessWidget {
             ],
           ),
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
+            child: FutureBuilder<List<Map<String, dynamic>>>(  // Get cached confessions first
               future: getCachedConfessions(),
               builder: (context, cacheSnapshot) {
                 if (cacheSnapshot.connectionState == ConnectionState.waiting) {
@@ -539,7 +549,7 @@ class Confessions extends StatelessWidget {
 
                 List<Map<String, dynamic>> cachedConfessions = cacheSnapshot.data ?? [];
 
-                return StreamBuilder<QuerySnapshot>(
+                return StreamBuilder<QuerySnapshot>(  // Live Firestore data stream
                   stream: FirebaseFirestore.instance
                       .collection('confessions')
                       .where('status', isEqualTo: 'approved')
@@ -555,11 +565,12 @@ class Confessions extends StatelessWidget {
                     }
 
                     if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                      // Cache newly fetched confessions
                       cacheConfessions(snapshot.data!.docs, cachedConfessions);
                       return _buildConfessionList(snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList(), currentUserId);
                     }
 
-                    return _buildConfessionList(cachedConfessions, currentUserId);
+                    return _buildConfessionList(cachedConfessions, currentUserId);  // Fallback to cached data
                   },
                 );
               },
@@ -576,11 +587,19 @@ class Confessions extends StatelessWidget {
       itemCount: confessions.length,
       itemBuilder: (context, index) {
         var confession = confessions[index];
-        String? mediaPath = confession['mediaPath']??"";
-        String? postOwnerId = confession['userId']??"";
+        String? mediaPath = confession['mediaPath'] ?? "";
+        String? postOwnerId = confession['userId'] ?? "";
+
+        // Check if 'createdAt' is a Timestamp
+        String formattedDate = "";
+        if (confession['createdAt'] is Timestamp) {
+          formattedDate = formatTimestamp(confession['createdAt'] as Timestamp);
+        } else {
+          formattedDate = confession['createdAt'] ?? '';  // Fallback if the field is not available
+        }
 
         return Dismissible(
-          key: Key(confession['id']??""),
+          key: Key(confession['id'] ?? ""),
           direction: currentUserId == postOwnerId
               ? DismissDirection.endToStart
               : DismissDirection.none,
@@ -609,14 +628,14 @@ class Confessions extends StatelessWidget {
                       backgroundImage: NetworkImage(confession['profilePic'] ?? 'assets/profile_placeholder.png'),
                     ),
                     title: const Text('Anonymous'),
-                    subtitle: Text(confession['createdAt'].toString() ?? ""),
+                    subtitle: Text(formattedDate),  // Display the formatted date
                   ),
                   Text(
                     confession['message'] ?? "No message available",
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 10),
-                  if (mediaPath != null && mediaPath.isNotEmpty) MediaViewer(mediaPath: mediaPath),
+                  if (mediaPath!.isNotEmpty) MediaViewer(mediaPath: mediaPath),
                   const SizedBox(height: 20),
                 ],
               ),

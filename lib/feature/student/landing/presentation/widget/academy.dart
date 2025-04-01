@@ -1,5 +1,3 @@
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +9,7 @@ import '../../../../admin/presentations/database/db.dart';
 import 'academy_post.dart';
 import 'dart:convert';
 
-
+/*
 class Academy extends StatefulWidget {
   const Academy({super.key});
 
@@ -45,7 +43,8 @@ class _AcademyState extends State<Academy> {
               List<Map<String, dynamic>> cachedPosts = cacheSnapshot.data ?? [];
 
               return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('academy')
+                stream: FirebaseFirestore.instance
+                    .collection('academy')
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting &&
@@ -61,7 +60,7 @@ class _AcademyState extends State<Academy> {
                     _cachePosts(snapshot.data!.docs, cachedPosts);
                     return _buildPostList(snapshot.data!.docs
                         .map((doc) =>
-                    Map<String, dynamic>.from(doc.data() as Map))
+                            Map<String, dynamic>.from(doc.data() as Map))
                         .toList());
                   }
 
@@ -82,16 +81,14 @@ class _AcademyState extends State<Academy> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text("All view",
-              style: Theme
-                  .of(context)
+              style: Theme.of(context)
                   .textTheme
                   .displayMedium!
                   .copyWith(color: Colors.blue)),
           GestureDetector(
             onTap: () => nextScreen(context, AcademyPostScreen()),
             child: Text("Create Post",
-                style: Theme
-                    .of(context)
+                style: Theme.of(context)
                     .textTheme
                     .displayMedium!
                     .copyWith(color: Colors.blue)),
@@ -126,7 +123,7 @@ class _AcademyState extends State<Academy> {
         } else {
           createdAt = DateTime.now().toString();
         }
-        print("ID THAT IS BEING CACHED ${ post.id}");
+        print("ID THAT IS BEING CACHED ${post.id}");
         await _dbHelper.insertAcademicPost({
           'id': post.id,
           'message': data['message'] ?? '',
@@ -143,71 +140,70 @@ class _AcademyState extends State<Academy> {
         });
       }
     }
-
-    Widget _buildPostList(List<Map<String, dynamic>> posts) {
-      return ListView.builder(
-        itemCount: posts.length,
-        itemBuilder: (context, index) {
-          var post = posts[index];
-          String postOwnerId = post['userId']?.toString() ?? "";
-          String mediaPath = post['mediaPath']?.toString() ?? "";
-
-          return Dismissible(
-            key: Key(post['id']?.toString() ?? ""),
-            direction: currentUserId == postOwnerId
-                ? DismissDirection.endToStart
-                : DismissDirection.none,
-            onDismissed: (direction) async {
-              await FirebaseFirestore.instance
-                  .collection('academy')
-                  .doc(post['id'])
-                  .delete();
-              await _dbHelper.deletePost(
-                  'academy_posts', post['id']?.toString() ?? "");
-            },
-            background: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 16),
-              child: const Icon(Icons.delete, color: Colors.white),
-            ),
-            child: Card(
-              elevation: 3,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      title: Text(post['name']?.toString() ?? 'Unknown'),
-                    ),
-                    Text(post['message']?.toString() ?? '',
-                        style: Theme
-                            .of(context)
-                            .textTheme
-                            .bodyMedium),
-                    const SizedBox(height: 20),
-                    if (mediaPath.isNotEmpty) MediaViewer(mediaPath: mediaPath),
-                    Row(
-                      children: [
-                        LikeButton(postId: post['id']?.toString() ??
-                            "wZhB30BDFy6tvFzj26B9",
-                            currentUserId: currentUserId),
-                        CommentButton(postId: post['id']?.toString() ??
-                            "wZhB30BDFy6tvFzj26B9", onCommentTapped: () {}),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
   }
 
+  Widget _buildPostList(List<Map<String, dynamic>> posts) {
+    return ListView.builder(
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        var post = posts[index];
+        String postOwnerId = post['userId']?.toString() ?? "";
+        String mediaPath = post['mediaPath']?.toString() ?? "";
+
+        return Dismissible(
+          key: Key(post['id']?.toString() ?? ""),
+          direction: currentUserId == postOwnerId
+              ? DismissDirection.endToStart
+              : DismissDirection.none,
+          onDismissed: (direction) async {
+            await FirebaseFirestore.instance
+                .collection('academy')
+                .doc(post['id'])
+                .delete();
+            await _dbHelper.deletePost(
+                'academy_posts', post['id']?.toString() ?? "");
+          },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 16),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          child: Card(
+            elevation: 3,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    title: Text(post['name']?.toString() ?? 'Unknown'),
+                  ),
+                  Text(post['message']?.toString() ?? '',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 20),
+                  if (mediaPath.isNotEmpty) MediaViewer(mediaPath: mediaPath),
+                  Row(
+                    children: [
+                      LikeButton(
+                          postId:
+                              post['id']?.toString() ?? "",
+                          currentUserId: currentUserId),
+                      CommentButton(
+                          postId:
+                              post['id']?.toString() ?? "",
+                          onCommentTapped: () {}),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class CommentCount extends StatelessWidget {
@@ -218,7 +214,11 @@ class CommentCount extends StatelessWidget {
   Widget build(BuildContext context) {
     print("THE COMMENT ID IS: $postId");
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('academy').doc(postId).collection('comments').snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('academy')
+          .doc(postId)
+          .collection('comments')
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return Text("0 comments");
         int commentCount = snapshot.data!.docs.length;
@@ -243,6 +243,7 @@ class SectionButton extends StatelessWidget {
     );
   }
 }
+
 class LikeButton extends StatelessWidget {
   final String postId;
   final String? currentUserId;
@@ -253,7 +254,10 @@ class LikeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     print("THE COMMENT ID IS: $postId");
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('academy').doc(postId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('academy')
+          .doc(postId)
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return CircularProgressIndicator();
 
@@ -265,8 +269,13 @@ class LikeButton extends StatelessWidget {
           children: [
             IconButton(
               onPressed: () {
-                FirebaseFirestore.instance.collection('academy').doc(postId).update({
-                  'likes': isLiked ? FieldValue.arrayRemove([currentUserId]) : FieldValue.arrayUnion([currentUserId])
+                FirebaseFirestore.instance
+                    .collection('academy')
+                    .doc(postId)
+                    .update({
+                  'likes': isLiked
+                      ? FieldValue.arrayRemove([currentUserId])
+                      : FieldValue.arrayUnion([currentUserId])
                 });
               },
               icon: Icon(
@@ -284,7 +293,7 @@ class LikeButton extends StatelessWidget {
 
 class CommentButton extends StatelessWidget {
   final VoidCallback onCommentTapped;
-  CommentButton({required this.onCommentTapped,required this.postId});
+  CommentButton({required this.onCommentTapped, required this.postId});
   final String postId;
   @override
   Widget build(BuildContext context) {
@@ -295,12 +304,14 @@ class CommentButton extends StatelessWidget {
           icon: Icon(Icons.comment),
           onPressed: onCommentTapped,
         ),
-        CommentCount(postId: postId,)
-
+        CommentCount(
+          postId: postId,
+        )
       ],
     );
   }
 }
+
 class CommentSection extends StatefulWidget {
   final String postId;
   final TextEditingController commentController;
@@ -342,9 +353,14 @@ class _CommentSectionState extends State<CommentSection> {
                     return ListTile(
                       leading: CircleAvatar(
                         radius: 15,
-                        backgroundImage:comment['profilePic']!=null? AssetImage(AppImages.profile):NetworkImage(comment['profilePic']),),
+                        backgroundImage: comment['profilePic'] != null
+                            ? AssetImage(AppImages.profile)
+                            : NetworkImage(comment['profilePic']),
+                      ),
                       title: Text(comment['text']),
-                      subtitle: Text(comment['createdAt']?.toDate().toString() ?? 'Just now'),
+                      subtitle: Text(
+                          comment['createdAt']?.toDate().toString() ??
+                              'Just now'),
                     );
                   },
                 ),
@@ -363,7 +379,8 @@ class _CommentSectionState extends State<CommentSection> {
         ),
         Container(
           margin: EdgeInsets.symmetric(vertical: 10),
-          width: MediaQuery.of(context).size.width - (MediaQuery.of(context).size.width / 8),
+          width: MediaQuery.of(context).size.width -
+              (MediaQuery.of(context).size.width / 8),
           child: TextField(
             controller: widget.commentController,
             decoration: InputDecoration(
@@ -392,7 +409,7 @@ class _CommentSectionState extends State<CommentSection> {
     );
   }
 }
-
+*/
 
 /*
 class CommentSection extends StatefulWidget {
@@ -885,5 +902,356 @@ class _CommentSectionState extends State<CommentSection> {
 
 */
 
+
+
+class Academy extends StatefulWidget {
+  const Academy({super.key});
+
+  @override
+  State<Academy> createState() => _AcademyState();
+}
+class _AcademyState extends State<Academy> {
+  final TextEditingController commentController = TextEditingController();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  bool isCaching = false;
+  Map<String, bool> postVisibilityMap = {}; // Track visibility for each post
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _buildHeader(),
+        Expanded(
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _dbHelper.getCachedAcademicPosts(),
+            builder: (context, cacheSnapshot) {
+              if (cacheSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (cacheSnapshot.hasError) {
+                return const Center(child: Text('Something went wrong!'));
+              }
+
+              List<Map<String, dynamic>> cachedPosts = cacheSnapshot.data ?? [];
+
+              return StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('academy').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting && cachedPosts.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Something went wrong!'));
+                  }
+
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    _cachePosts(snapshot.data!.docs, cachedPosts); // Cache posts from Firebase
+                    return _buildPostList(snapshot.data!.docs.map((doc) =>
+                    Map<String, dynamic>.from(doc.data() as Map)).toList());
+                  }
+
+                  return _buildPostList(cachedPosts);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Define the method to cache posts from Firebase
+  Future<void> _cachePosts(List<QueryDocumentSnapshot> firebaseDocs, List<Map<String, dynamic>> cachedPosts) async {
+    for (var doc in firebaseDocs) {
+      String postId = doc.id;
+      // Check if this post is already cached
+      bool isPostCached = cachedPosts.any((post) => post['id'] == postId);
+        print("cached post id $postId");
+      print("cached post id $isPostCached");
+      if (!isPostCached) {
+        // Create a new post to save into the local database
+        print("Inserting Post");
+        var post = doc.data() as Map<String, dynamic>;
+        print("Adding postId $postId");
+        post['id'] = postId;
+
+        print("Each post $post");// Add post ID to the post data
+        await _dbHelper.insertPost('academy_posts', post); // Cache the post locally
+      }
+    }
+  }
+
+  Widget _buildPostList(List<Map<String, dynamic>> posts) {
+    return ListView.builder(
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        var post = posts[index];
+        String postId = post['id']?.toString() ?? "";
+
+        String postOwnerId = post['userId']?.toString() ?? "";
+        String mediaPath = post['mediaPath']?.toString() ?? "";
+
+        return Dismissible(
+          key: Key(postId),
+          direction: currentUserId == postOwnerId ? DismissDirection.endToStart : DismissDirection.none,
+          onDismissed: (direction) async {
+            await FirebaseFirestore.instance.collection('academy').doc(postId).delete();
+            await _dbHelper.deletePost('academy_posts', postId);
+          },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 16),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          child: Card(
+            elevation: 3,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    title: Text(post['name']?.toString() ?? 'Unknown'),
+                  ),
+                  Text(post['message']?.toString() ?? '', style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 20),
+                  Text("Post id Id $postId"),
+                  if (mediaPath.isNotEmpty) MediaViewer(mediaPath: mediaPath),
+                  Row(
+                    children: [
+                      LikeButton(postId: "NKUdiNZJf4WNpzsK10Nc", currentUserId: currentUserId),
+                      CommentButton(
+                        postId: postId,
+                        onCommentTapped: () {
+                          setState(() {
+                            postVisibilityMap[postId] = !(postVisibilityMap[postId] ?? false);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  if (postVisibilityMap[postId] ?? false)
+                    CommentSection(postId: "NKUdiNZJf4WNpzsK10Nc", commentController: commentController),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Align(
+      alignment: Alignment.topRight,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text("All view",
+              style: Theme.of(context)
+                  .textTheme
+                  .displayMedium!
+                  .copyWith(color: Colors.blue)),
+          GestureDetector(
+            onTap: () => nextScreen(context, AcademyPostScreen()), // Navigate to AcademyPostScreen
+            child: Text("Create Post",
+                style: Theme.of(context)
+                    .textTheme
+                    .displayMedium!
+                    .copyWith(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+class CommentButton extends StatelessWidget {
+  final VoidCallback onCommentTapped;
+  final String postId;
+  CommentButton({required this.onCommentTapped, required this.postId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(Icons.comment),
+          onPressed: onCommentTapped,
+        ),
+      ],
+    );
+  }
+}
+
+class CommentSection extends StatefulWidget {
+  final String postId;
+  final TextEditingController commentController;
+
+  CommentSection({required this.postId, required this.commentController});
+
+  @override
+  _CommentSectionState createState() => _CommentSectionState();
+}
+
+class _CommentSectionState extends State<CommentSection> {
+  int commentLimit = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('academy')
+              .doc(widget.postId)
+              .collection('comments')
+              .orderBy('createdAt', descending: true)
+              .limit(commentLimit)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return CircularProgressIndicator();
+
+            var comments = snapshot.data!.docs;
+            return Column(
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: comments.length,
+                  itemBuilder: (context, index) {
+                    var comment = comments[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        radius: 15,
+                        backgroundImage: comment['profilePic'] != null
+                            ? AssetImage(AppImages.profile)
+                            : NetworkImage(comment['profilePic']),
+                      ),
+                      title: Text(comment['text']),
+                      subtitle: Text(comment['createdAt']?.toDate().toString() ?? 'Just now'),
+                    );
+                  },
+                ),
+                if (comments.length >= commentLimit)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        commentLimit += 5;
+                      });
+                    },
+                    child: Text("View More"),
+                  ),
+              ],
+            );
+          },
+        ),
+        Container(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          width: MediaQuery.of(context).size.width - (MediaQuery.of(context).size.width / 8),
+          child: TextField(
+            controller: widget.commentController,
+            decoration: InputDecoration(
+              suffixIcon: IconButton(
+                icon: Icon(Icons.send),
+                onPressed: () {
+                  if (widget.commentController.text.isNotEmpty) {
+                    FirebaseFirestore.instance
+                        .collection('academy')
+                        .doc(widget.postId)
+                        .collection('comments')
+                        .add({
+                      'text': widget.commentController.text,
+                      'createdAt': FieldValue.serverTimestamp(),
+                    });
+                    widget.commentController.clear();
+                  }
+                },
+              ),
+              hintStyle: Theme.of(context).textTheme.displaySmall,
+              hintText: 'Add a comment...',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+class LikeButton extends StatelessWidget {
+  final String postId;
+  final String? currentUserId;
+
+  LikeButton({required this.postId, required this.currentUserId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('academy')
+          .doc(postId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return CircularProgressIndicator();
+
+        var data = snapshot.data!.data() as Map<String, dynamic>;
+        List<String> likes = List<String>.from(data['likes'] ?? []);
+        bool isLiked = likes.contains(currentUserId);
+
+        return Column(
+          children: [
+            IconButton(
+              onPressed: () {
+                FirebaseFirestore.instance
+                    .collection('academy')
+                    .doc(postId)
+                    .update({
+                  'likes': isLiked
+                      ? FieldValue.arrayRemove([currentUserId])
+                      : FieldValue.arrayUnion([currentUserId])
+                });
+              },
+              icon: Icon(
+                isLiked ? Icons.favorite : Icons.favorite_border,
+                color: isLiked ? Colors.red : Colors.grey,
+              ),
+            ),
+            Text("${likes.length} likes"),
+          ],
+        );
+      },
+    );
+  }
+}
+
+
+class CommentCount extends StatelessWidget {
+  final String postId;
+
+  CommentCount({required this.postId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('academy')
+          .doc(postId)
+          .collection('comments')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return Text("0 comments");
+        int commentCount = snapshot.data!.docs.length;
+        return Text("$commentCount comments");
+      },
+    );
+  }
+}
 
 

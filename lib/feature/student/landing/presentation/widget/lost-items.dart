@@ -356,6 +356,9 @@ class MissingItems extends StatelessWidget {
 */
 
 
+import 'package:intl/intl.dart';  // Import intl package
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 class MissingItems extends StatelessWidget {
   const MissingItems({super.key});
 
@@ -366,12 +369,15 @@ class MissingItems extends StatelessWidget {
   Future<void> cacheLostFoundPosts(List<QueryDocumentSnapshot> posts) async {
     final db = DatabaseHelper();
     for (var post in posts) {
+      // Convert Firestore Timestamp to DateTime for 'createdAt'
+      DateTime createdAt = (post['createdAt'] as Timestamp).toDate();
+
       await db.insertPost('lost_found_posts', {
         'id': post.id,
         'message': post['message'] ?? '',
         'mediaPath': post['mediaPath'] ?? '',
         'mediaType': post['mediaType'] ?? '',
-        'createdAt': post['createdAt'].toDate().toString(),
+        'createdAt': createdAt.toString(), // Store the formatted date string
         'userId': post['userId'] ?? '',
         'type': post['type'] ?? '',
       });
@@ -417,7 +423,7 @@ class MissingItems extends StatelessWidget {
                 return const Center(child: Text('Something went wrong!'));
               }
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return FutureBuilder<List<Map<String, dynamic>>>(
+                return FutureBuilder<List<Map<String, dynamic>>>(  // Cache fallback
                   future: getCachedLostFoundPosts(),
                   builder: (context, cachedSnapshot) {
                     if (cachedSnapshot.connectionState == ConnectionState.waiting) {
@@ -433,7 +439,7 @@ class MissingItems extends StatelessWidget {
                   },
                 );
               }
-              cacheLostFoundPosts(snapshot.data!.docs);
+              cacheLostFoundPosts(snapshot.data!.docs); // Cache posts
               return _buildPostList(snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList(), currentUserId, context);
             },
           ),
@@ -454,8 +460,15 @@ class MissingItems extends StatelessWidget {
   }
 
   Widget _buildPostItem(Map<String, dynamic> post, String? currentUserId, BuildContext context) {
+    // Convert Firestore Timestamp to DateTime for display
+    DateTime createdAt = (post['createdAt'] is Timestamp)
+        ? (post['createdAt'] as Timestamp).toDate()
+        : DateTime.parse(post['createdAt']);  // If it's not a Timestamp, it should already be a DateTime.
+
+    String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
+
     return Dismissible(
-      key: Key(post['id']),
+      key: Key(post['id']??""),
       direction: currentUserId == post['userId'] ? DismissDirection.endToStart : DismissDirection.none,
       confirmDismiss: (direction) async {
         return await showDialog(
@@ -499,7 +512,7 @@ class MissingItems extends StatelessWidget {
                   backgroundImage: NetworkImage(post['profilePic'] ?? AppImages.profile),
                 ),
                 title: Text(post['userName'] ?? "Anonymous"),
-                subtitle: Text(post['createdAt'] ?? "Unknown date"),
+                subtitle: Text(formattedDate),  // Display formatted date
               ),
               Text(post['message'], style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 20),
@@ -511,5 +524,3 @@ class MissingItems extends StatelessWidget {
     );
   }
 }
-
-

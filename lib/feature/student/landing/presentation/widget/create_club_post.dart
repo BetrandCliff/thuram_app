@@ -529,7 +529,61 @@ class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
   }
 
   /// Submit club post
+  ///
+
   Future<void> _submitClubPost(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final message = _messageController.text;
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (_media == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select an image or video'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Uploading media...")),
+      );
+
+      String? uploadedMediaUrl = await _uploadMedia(_media!);
+      if (uploadedMediaUrl == null) {
+        throw Exception("Failed to upload media.");
+      }
+
+      var newPost = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'message': message,
+        'createdAt': DateTime.now().toIso8601String(),
+        'userId': currentUser?.uid,
+        'mediaPath': uploadedMediaUrl,
+      };
+
+      await FirebaseFirestore.instance.collection('clubPosts').doc(newPost['id']).set(newPost);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Post submitted successfully!")),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint("Error submitting club post: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit club post. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /* Future<void> _submitClubPost(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
     final message = _messageController.text;
@@ -582,7 +636,7 @@ class _CreateClubPostScreenState extends State<CreateClubPostScreen> {
         ),
       );
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {

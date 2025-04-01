@@ -438,6 +438,15 @@ class ClubsAndPost extends StatelessWidget {
 
  */
 import 'package:path/path.dart';
+
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';  // Import intl package
+
+
+import 'package:intl/intl.dart'; // Import the intl package
+
 class ClubsAndPost extends StatefulWidget {
   const ClubsAndPost({super.key, required this.isStudent});
   final bool isStudent;
@@ -455,6 +464,11 @@ class _ClubsAndPostState extends State<ClubsAndPost> {
   void initState() {
     super.initState();
     checkDatabase(); // Check if the database exists
+  }
+
+  // Format the DateTime to String with the desired format
+  String formatDateTime(DateTime dateTime) {
+    return DateFormat('dd MMM yyyy, HH:mm').format(dateTime); // Day, Month, Year, Time format
   }
 
   void checkDatabase() async {
@@ -476,7 +490,7 @@ class _ClubsAndPostState extends State<ClubsAndPost> {
       children: [
         _buildHeader(context),
         Expanded(
-          child: FutureBuilder<List<Map<String, dynamic>>>(
+          child: FutureBuilder<List<Map<String, dynamic>>>(  // Fetch cached posts
             future: _dbHelper.getCachedPosts('clubPosts'),
             builder: (context, cacheSnapshot) {
               if (cacheSnapshot.connectionState == ConnectionState.waiting) {
@@ -490,9 +504,6 @@ class _ClubsAndPostState extends State<ClubsAndPost> {
               List<Map<String, dynamic>> cachedPosts = cacheSnapshot.data ?? [];
 
               debugPrint("Fetched Cached Posts: ${cachedPosts.length}");
-              for (var post in cachedPosts) {
-                debugPrint("Cached Post ID: ${post['id']}, Message: ${post['message']}");
-              }
 
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -510,7 +521,7 @@ class _ClubsAndPostState extends State<ClubsAndPost> {
                   List<QueryDocumentSnapshot> firestorePosts = snapshot.data?.docs ?? [];
 
                   if (firestorePosts.isNotEmpty) {
-                    _cachePosts(firestorePosts, cachedPosts);
+                    _cachePosts(firestorePosts, cachedPosts);  // Cache posts if not already cached
                   }
 
                   return _buildPostList(
@@ -549,6 +560,100 @@ class _ClubsAndPostState extends State<ClubsAndPost> {
     try {
       Set<String> cachedIds = cachedPosts.map((e) => e['id'] as String? ?? "").toSet();
 
+      List<Map<String, dynamic>> newPostsToCache = [];
+
+      for (var post in firestorePosts) {
+        if (!cachedIds.contains(post.id)) {
+          var data = Map<String, dynamic>.from(post.data() as Map);
+
+          Map<String, dynamic> postToInsert = {
+            'id': post.id,
+            'message': data['message'] ?? '',
+            'mediaPath': data['mediaUrl'] is Map<String, dynamic> ? jsonEncode(data['mediaUrl']) : (data['mediaUrl'] ?? ''),
+            'createdAt': formatDateTime((data['createdAt'] as Timestamp).toDate()),  // Use formatDateTime
+            'userId': data['userId'] ?? '',
+          };
+
+          newPostsToCache.add(postToInsert);
+        }
+      }
+
+      if (newPostsToCache.isNotEmpty) {
+        for (var post in newPostsToCache) {
+          debugPrint("Caching post: ${post['id']}");
+          await _dbHelper.insertPost('clubPosts', post);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error caching posts: $e");
+    } finally {
+      if (mounted) setState(() => isCaching = false);
+    }
+  }
+
+  Widget _buildPostList(List<Map<String, dynamic>> posts) {
+    return ListView.builder(
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        var post = posts[index];
+        String? postOwnerId = post['userId'];
+        String? mediaPath = post['mediaPath'];
+
+        return Dismissible(
+          key: Key(post['id'] ?? ""),
+          direction: currentUserId == postOwnerId ? DismissDirection.endToStart : DismissDirection.none,
+          onDismissed: (direction) async {
+            await FirebaseFirestore.instance.collection('clubPosts').doc(post['id']).delete();
+            await _dbHelper.deletePost('clubPosts', post['id']);
+          },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 16),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          child: Card(
+            elevation: 3,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    leading: GestureDetector(
+                      onTap: () => nextScreen(context, ProfilePage(userId: postOwnerId!)),
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundImage: NetworkImage(post['profilePic'] ?? ""),
+                      ),
+                    ),
+                    title: Text(post['userName'] ?? "Anonymous"),
+                    subtitle: Text(post['createdAt'] ?? ""),  // Display the formatted date
+                  ),
+                  Text(post['message'], style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 10),
+                  if (mediaPath != null && mediaPath.isNotEmpty) MediaViewer(mediaPath: mediaPath),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+
+
+  /*Future<void> _cachePosts(List<QueryDocumentSnapshot> firestorePosts, List<Map<String, dynamic>> cachedPosts) async {
+    if (isCaching) return;
+    isCaching = true;
+
+    try {
+      Set<String> cachedIds = cachedPosts.map((e) => e['id'] as String? ?? "").toSet();
+
       for (var post in firestorePosts) {
         if (!cachedIds.contains(post.id)) {
           var data = Map<String, dynamic>.from(post.data() as Map);
@@ -570,8 +675,8 @@ class _ClubsAndPostState extends State<ClubsAndPost> {
     } finally {
       if (mounted) setState(() => isCaching = false);
     }
-  }
-
+  }*/
+/*
   Widget _buildPostList(List<Map<String, dynamic>> posts) {
     return ListView.builder(
       itemCount: posts.length,
@@ -623,6 +728,6 @@ class _ClubsAndPostState extends State<ClubsAndPost> {
         );
       },
     );
-  }
-}
+  }*/
+
 

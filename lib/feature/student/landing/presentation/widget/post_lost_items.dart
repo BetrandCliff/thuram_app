@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:thuram_app/util/next-screen.dart';
+
+import '../../../../../core/constants/constants.dart';
 /*
 class PostLostFoundScreen extends StatefulWidget {
   const PostLostFoundScreen({super.key});
@@ -71,14 +76,8 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
 
 
 
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
-import 'package:http/http.dart' as http;
 
-import 'package:http/http.dart' as http;
-
-import '../../../../../core/constants/constants.dart';
 class PostLostFoundScreen extends StatefulWidget {
   const PostLostFoundScreen({Key? key}) : super(key: key);
 
@@ -259,4 +258,3 @@ class _PostLostFoundScreenState extends State<PostLostFoundScreen> {
     );
   }
 }
-

@@ -54,9 +54,11 @@ class _SearchStaffScreenState extends State<SearchStaffScreen> {
       child: Scaffold(
         body: Column(
           children: [
+            SizedBox(height: 20,),
             TabBar(
               labelColor: Colors.orange,
-              unselectedLabelColor: Colors.black,
+              dividerHeight: 0,
+              // unselectedLabelColor: Colors.black,
               indicatorColor: Colors.orange,
               tabs: [
                 Tab(text: 'Profs'),

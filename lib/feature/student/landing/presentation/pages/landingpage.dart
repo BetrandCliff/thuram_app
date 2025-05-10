@@ -29,6 +29,13 @@ class LandingPage extends StatefulWidget {
 GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
 
 class _LandingPageState extends State<LandingPage> {
+  // final List<String> ScreenTitle = [
+  //   "Home",
+  //   "Follows",
+  //   "Search",
+  //   "Courses",
+  //   "Profile"
+  // ];
   final List<Widget> Pages = [
     HomePage(),
     Following(),
@@ -57,24 +64,34 @@ class _LandingPageState extends State<LandingPage> {
           backgroundColor: Color(0xffffffff),
           child: DrawerItems(),
         ),
-        appBar: AppBar(
-          leading: IconButton(
-              onPressed: () {
-                key.currentState!.openDrawer();
-              },
-              icon: Icon(Icons.menu)),
-          centerTitle: true,
-          actions: [
-            IconButton(onPressed: (){nextScreen(context, ChatListScreen());}, icon: Icon(Icons.message_rounded)),
-            SizedBox(width: 20,)
-          ],
-          title: Image.asset(
-            AppImages.logo,
-            width: 25,
-          ),
-        ),
+        // appBar: AppBar(
+        //   leading: IconButton(
+        //       onPressed: () {
+        //         key.currentState!.openDrawer();
+        //       },
+        //       icon: Icon(Icons.menu)),
+        //   centerTitle: true,
+        //   actions: [
+        //     IconButton(
+        //         onPressed: () {
+        //           nextScreen(context, ChatListScreen());
+        //         },
+        //         icon: Icon(Icons.message_rounded)),
+        //     SizedBox(
+        //       width: 20,
+        //     )
+        //   ],
+        //   title: Text(
+        //     "${ScreenTitle[_selectedIndex]}",
+        //     style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 18),
+        //   ),
+        //   // title: Image.asset(
+        //   //   AppImages.logo,
+        //   //   width: 25,
+        //   // ),
+        // ),
         body: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(top:18.0,left: 8.0,right: 8.0),
           child: Pages[_selectedIndex],
         ),
         bottomNavigationBar: BottomAppBar(

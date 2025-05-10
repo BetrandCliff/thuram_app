@@ -118,32 +118,21 @@ class _SigninFormState extends State<SigninForm> {
     }
   }
 
-  // Check email verification periodically
   Future<void> _checkEmailVerified(User user) async {
-    bool isVerified = user.emailVerified;
+    await user.reload();
+    user = FirebaseAuth.instance.currentUser!;
 
-    // Loop until the email is verified
-    while (!isVerified) {
-      await Future.delayed(Duration(seconds: 5)); // Delay for a while before checking again
-      await user.reload(); // Reload user data to check email verification status
-      user = FirebaseAuth.instance.currentUser!; // Re-fetch user after reload
-      isVerified = user.emailVerified; // Update verification status
-    }
-
-    // Show a confirmation once the email is verified
-    Fluttertoast.showToast(msg: "Email verified successfully! Logging you in...");
-
-    // After email verification, log in the user again to update the session state
-    try {
-      // Log the user in again to ensure session is updated
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: user.email!,
-        password: _passwordController.text.trim(),
+    if (user.emailVerified) {
+      Fluttertoast.showToast(msg: "Email verified successfully! Please log in.");
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => LandingPage()),
       );
-    } catch (e) {
-      Fluttertoast.showToast(msg: "Login failed after verification. Please try again.");
+    } else {
+      Fluttertoast.showToast(msg: "Email not verified. Check your inbox.");
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

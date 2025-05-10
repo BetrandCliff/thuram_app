@@ -168,10 +168,11 @@ class _FollowingState extends State<Following>
       length: 2,
       child: Column(
         children: [
+          SizedBox(height: 20,),
           TabBar(
             controller: _tabController,
             labelColor: Colors.red,
-            unselectedLabelColor: Colors.grey,
+              dividerHeight: 0,
             indicatorColor: Colors.red,
             tabs: [Tab(text: "Following"), Tab(text: "Follower")],
           ),

@@ -35,7 +35,7 @@ class _LecturerLandingPageState extends State<LecturerLandingPage> {
       isStudent: false,
      
     ),
-    const CustomDescriptionCard(),
+    const CustomDescriptionCard(isLecturer: true,),
   ];
 
   final List<String> ScreenTitle = ['Home', "Follow", "Courses", "Profile"];
